@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { 
@@ -10,24 +10,53 @@ import {
   Users, 
   ArrowUpRight,
   MoreHorizontal,
-  Plus
+  Plus,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const SellerDashboard = () => {
-  const stats = [
-    { name: "NET VOLUME", value: "$45,231.89", change: "+24.1%", icon: <DollarSign size={22} />, color: "text-chart-2", bg: "bg-chart-2/10" },
-    { name: "ACTIVE ORDERS", value: "1,245", change: "+12.5%", icon: <ShoppingBag size={22} />, color: "text-primary", bg: "bg-primary/10" },
-    { name: "LOYAL CLIENTS", value: "892", change: "+18.2%", icon: <Users size={22} />, color: "text-chart-4", bg: "bg-chart-4/10" },
-    { name: "CONVERSION", value: "3.62%", change: "-2.4%", icon: <TrendingUp size={22} />, color: "text-chart-5", bg: "bg-chart-5/10" },
-  ];
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const recentOrders = [
-    { id: "#8234", customer: "Alice Johnson", product: "Royal Floral Design", amount: "$45.00", status: "Completed", date: "2 mins ago", img: "https://i.pravatar.cc/100?img=1" },
-    { id: "#8235", customer: "Bob Smith", product: "Cyber Tech Patch", amount: "$29.99", status: "Processing", date: "15 mins ago", img: "https://i.pravatar.cc/100?img=2" },
-    { id: "#8236", customer: "Charlie Brown", product: "Gold Crest Emblem", amount: "$120.00", status: "Pending", date: "1 hour ago", img: "https://i.pravatar.cc/100?img=3" },
-    { id: "#8237", customer: "Diana Prince", product: "Vintage Shield", amount: "$55.00", status: "Completed", date: "3 hours ago", img: "https://i.pravatar.cc/100?img=4" },
-  ];
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/seller/stats");
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case "DollarSign": return <DollarSign size={22} />;
+      case "ShoppingBag": return <ShoppingBag size={22} />;
+      case "Users": return <Users size={22} />;
+      case "TrendingUp": return <TrendingUp size={22} />;
+      default: return <DollarSign size={22} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="h-[70vh] flex flex-col items-center justify-center space-y-6">
+        <Loader2 size={60} className="animate-spin text-primary" />
+        <p className="text-[11px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 animate-pulse">Syncing with global network...</p>
+      </div>
+    );
+  }
+
+  const stats = data?.stats || [];
+  const recentOrders = data?.recentOrders || [];
+  const chartData = data?.chartData || [];
 
   return (
     <div className="space-y-12 pb-20">
@@ -42,11 +71,11 @@ const SellerDashboard = () => {
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <Button variant="outline" className="h-14 px-8 rounded-2xl glass border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">
+          <Button variant="outline" className="h-14 px-8 rounded-2xl glass border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all italic">
             Generate Insight Report
           </Button>
           <Link href="/seller/products/new">
-            <Button className="h-14 px-8 rounded-2xl luxury-gradient border-none text-white shadow-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all">
+            <Button className="h-14 px-8 rounded-2xl luxury-gradient border-none text-white shadow-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all italic">
               <Plus size={16} className="mr-3" />
               Deploy Asset
             </Button>
@@ -56,7 +85,7 @@ const SellerDashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {stats.map((stat, i) => (
+        {stats.map((stat: any, i: number) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
@@ -67,7 +96,7 @@ const SellerDashboard = () => {
           >
             <div className="flex justify-between items-start mb-8">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border border-white/5 shadow-inner transition-transform group-hover:rotate-12 ${stat.bg} ${stat.color}`}>
-                {stat.icon}
+                {getIcon(stat.icon)}
               </div>
               <div className={`flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${stat.change.startsWith('+') ? 'bg-chart-2/10 text-chart-2' : 'bg-destructive/10 text-destructive'}`}>
                 {stat.change} <ArrowUpRight size={12} className="ml-1" />
@@ -89,7 +118,7 @@ const SellerDashboard = () => {
               <h2 className="text-2xl font-black tracking-tight uppercase italic">Revenue Velocity</h2>
               <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] mt-1">Growth trajectory over time</span>
             </div>
-            <select className="bg-white/5 border border-white/10 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest focus:ring-2 ring-primary/20 outline-none transition-all">
+            <select className="bg-white/5 border border-white/10 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest focus:ring-2 ring-primary/20 outline-none transition-all cursor-pointer">
               <option>Real-time Stream</option>
               <option>Last 30 Sessions</option>
               <option>Fiscal Quarter</option>
@@ -97,7 +126,7 @@ const SellerDashboard = () => {
           </div>
           
           <div className="h-[350px] flex items-end justify-between gap-4 relative z-10">
-            {[40, 60, 45, 90, 65, 85, 55, 75, 40, 60, 45, 90].map((h, i) => (
+            {chartData.map((h: number, i: number) => (
               <div key={i} className="flex-1 space-y-4 group cursor-pointer h-full flex flex-col justify-end">
                 <div className="relative h-full flex flex-col justify-end items-center">
                    <motion.div 
@@ -128,7 +157,11 @@ const SellerDashboard = () => {
           </div>
           
           <div className="space-y-5">
-            {recentOrders.map((order, i) => (
+            {recentOrders.length === 0 ? (
+              <div className="py-20 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/20 italic">Awaiting first ingestion...</p>
+              </div>
+            ) : recentOrders.map((order: any, i: number) => (
               <motion.div 
                 key={i} 
                 initial={{ opacity: 0, x: 20 }}
@@ -139,7 +172,7 @@ const SellerDashboard = () => {
                 <div className="flex items-center space-x-5">
                   <div className="relative">
                     <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <img src={order.img} className="relative z-10 w-12 h-12 rounded-2xl object-cover ring-2 ring-white/10" />
+                    <img src={order.img || "https://i.pravatar.cc/100"} className="relative z-10 w-12 h-12 rounded-2xl object-cover ring-2 ring-white/10" />
                   </div>
                   <div>
                     <p className="font-black text-[11px] uppercase tracking-tight leading-none mb-1.5">{order.customer}</p>
@@ -148,15 +181,17 @@ const SellerDashboard = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-black text-sm tracking-tighter italic text-primary">{order.amount}</p>
-                  <p className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.2em] mt-1">{order.date}</p>
+                  <p className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.2em] mt-1 italic">{new Date(order.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
               </motion.div>
             ))}
           </div>
           
-          <Button variant="outline" className="w-full h-16 mt-10 rounded-2xl border-white/5 border-dashed border-2 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">
-            Analyze All Operations
-          </Button>
+          <Link href="/seller/orders">
+            <Button variant="outline" className="w-full h-16 mt-10 rounded-2xl border-white/5 border-dashed border-2 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all italic">
+              Analyze All Operations
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

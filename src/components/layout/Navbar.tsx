@@ -67,22 +67,49 @@ const Navbar = () => {
             {/* Logo - HEAVY BRANDING */}
             <Link href="/" className="flex items-center group relative">
               <motion.div
-                whileHover={{ scale: 1.05, rotate: -2 }}
+                whileHover={{ scale: 1.05, y: -2 }}
                 className={`${
-                  scrolled ? "h-14 w-14" : "h-20 sm:h-24"
-                } px-3 flex items-center justify-center relative transition-all duration-1000 rounded-[2rem] bg-white/[0.03] border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl group-hover:border-primary/50 group-hover:shadow-[0_0_40px_rgba(37,99,235,0.4)]`}
+                  scrolled ? "h-12 w-12" : "h-16 sm:h-20"
+                } relative transition-all duration-1000 flex items-center justify-center`}
               >
-                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                <img
-                  src="/logo3.png"
-                  alt="Ultimate Digitizing"
-                  className="w-auto h-full object-contain relative z-10 filter drop-shadow-[0_8px_15px_rgba(0,0,0,0.8)] group-hover:brightness-110 transition-all duration-700"
-                />
+                {/* Brand Aura */}
+                <div className="absolute inset-[-20px] bg-primary/20 blur-[50px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                
+                {/* UD Monogram - "The Stitch Hub" */}
+                <div className="relative z-10 h-full aspect-square bg-[#020617] rounded-2xl flex items-center justify-center overflow-hidden border border-white/10 shadow-2xl group-hover:border-primary/50 transition-all duration-700">
+                  {/* Subtle Thread Pattern Overlay */}
+                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+                  
+                  {/* Outer Stitched Border */}
+                  <div className="absolute inset-[3px] border-[2px] border-dashed border-primary/40 rounded-xl animate-[spin_60s_linear_infinite]" />
+                  
+                  {/* The Monogram */}
+                  <div className="relative flex items-center justify-center">
+                    <span className="text-2xl sm:text-3xl font-black tracking-tighter text-white flex items-baseline italic">
+                      U
+                      <span className="text-primary -ml-1 drop-shadow-[0_0_10px_rgba(37,99,235,0.8)]">D</span>
+                    </span>
+                    
+                    {/* Realistic Stitch Texture via Shadows */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                       <span className="text-2xl sm:text-3xl font-black tracking-tighter text-transparent italic select-none" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.1)' }}>UD</span>
+                    </div>
+                  </div>
+
+                  {/* Glow Pulse */}
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-40 group-hover:opacity-100 transition-opacity" />
+                </div>
               </motion.div>
+              
               {!scrolled && (
-                <div className="ml-6 hidden md:flex flex-col">
-                   <span className="text-2xl font-black tracking-tighter text-gradient leading-none uppercase italic">ULTIMATE</span>
-                   <span className="text-[9px] font-black uppercase tracking-[0.6em] text-muted-foreground/40 mt-1.5 ml-0.5">Digitizing</span>
+                <div className="ml-5 hidden md:flex flex-col">
+                   <div className="flex items-center">
+                     <span className="text-2xl font-black tracking-tighter text-white leading-none uppercase italic">ULTIMATE</span>
+                     <div className="w-2 h-2 bg-primary rounded-full ml-2 animate-pulse shadow-[0_0_10px_rgba(37,99,235,1)]" />
+                   </div>
+                   <div className="flex items-center mt-1">
+                     <span className="text-[8px] font-black uppercase tracking-[0.6em] text-primary/60 italic">DIGITIZING</span>
+                   </div>
                 </div>
               )}
             </Link>

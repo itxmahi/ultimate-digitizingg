@@ -22,8 +22,9 @@ const Footer = () => {
             {/* Brand Section - "HEAVY" BRANDING */}
             <div className="lg:col-span-4 space-y-12">
               <Link href="/" className="flex items-center space-x-6 group">
-                <div className="w-16 h-16 glass border border-white/10 rounded-[1.5rem] flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.5)] transition-all duration-700 group-hover:rotate-12 group-hover:scale-110 group-hover:border-primary/50">
-                  <img src="/logo3.png" className="w-10 h-10 object-contain brightness-110" />
+                <div className="w-16 h-16 bg-[#020617] border border-white/10 rounded-[1.5rem] flex items-center justify-center shadow-2xl transition-all duration-700 group-hover:rotate-12 group-hover:scale-110 group-hover:border-primary/50 overflow-hidden relative">
+                  <div className="absolute inset-0 border-[2px] border-dashed border-primary/20 rounded-xl" />
+                  <span className="text-2xl font-black italic tracking-tighter text-white">U<span className="text-primary">D</span></span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-3xl font-black tracking-tighter text-gradient leading-none uppercase italic">ULTIMATE.</span>

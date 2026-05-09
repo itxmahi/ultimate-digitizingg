@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Timer, Zap, ShoppingCart, Heart, ArrowRight } from "lucide-react";
+import { Timer, Zap, ShoppingCart, Heart, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const FlashSale = () => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState({
     hours: 23,
     minutes: 59,
@@ -13,6 +16,22 @@ const FlashSale = () => {
   });
 
   useEffect(() => {
+    const fetchFlashSales = async () => {
+      try {
+        const response = await fetch("/api/products");
+        const data = await response.json();
+        // Filter products that have an active flash sale
+        const flashSales = data.filter((p: any) => p.flashSale && p.flashSale.isActive);
+        setProducts(flashSales.slice(0, 4));
+      } catch (error) {
+        console.error("Failed to fetch flash sales:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFlashSales();
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
@@ -21,15 +40,23 @@ const FlashSale = () => {
         return prev;
       });
     }, 1000);
-    return () => clearInterval(timer);
+
+    return () => {
+      clearInterval(timer);
+    };
   }, []);
 
-  const dummyProducts = [
-    { id: 1, name: "Premium Floral Pattern", price: 49.99, salePrice: 19.99, image: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=500&auto=format&fit=crop&q=60", discount: "60%" },
-    { id: 2, name: "Luxury Gold Crest", price: 89.99, salePrice: 34.99, image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&auto=format&fit=crop&q=60", discount: "65%" },
-    { id: 3, name: "Cyberpunk Tech Stitch", price: 59.99, salePrice: 24.99, image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&auto=format&fit=crop&q=60", discount: "58%" },
-    { id: 4, name: "Vintage Royal Emblem", price: 129.99, salePrice: 59.99, image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500&auto=format&fit=crop&q=60", discount: "55%" },
-  ];
+  if (loading) {
+    return (
+      <div className="py-32 flex flex-col items-center justify-center space-y-6">
+        <Loader2 size={40} className="animate-spin text-primary" />
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 italic">Syncing Flash Stream...</p>
+      </div>
+    );
+  }
+
+  // If no flash sales, don't show the section or show a message
+  if (products.length === 0) return null;
 
   return (
     <section id="flash-sale" className="py-32 relative overflow-hidden bg-background">
@@ -74,70 +101,75 @@ const FlashSale = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-          {dummyProducts.map((product, idx) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              whileHover={{ y: -15 }}
-              className="group relative glass border border-white/5 rounded-[3rem] overflow-hidden transition-all duration-700 shadow-2xl hover:border-primary/40"
-            >
-              <div className="relative aspect-[4/5] overflow-hidden m-2.5 rounded-[2.25rem]">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700" />
-                
-                <div className="absolute top-5 left-5 luxury-gradient text-white text-[9px] font-black px-4 py-2 rounded-full shadow-2xl z-10 tracking-[0.2em] italic uppercase">
-                  {product.discount} OFF
-                </div>
-                
-                <button className="absolute top-5 right-5 w-12 h-12 glass border border-white/10 rounded-2xl text-white flex items-center justify-center hover:bg-primary transition-all duration-500 z-10">
-                  <Heart size={18} className="group-hover:scale-110 transition-transform" />
-                </button>
+          {products.map((product, idx) => {
+            const discountPercent = Math.round((1 - (Number(product.flashSale.discountPrice) / Number(product.price))) * 100);
+            return (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                whileHover={{ y: -15 }}
+                className="group relative glass border border-white/5 rounded-[3rem] overflow-hidden transition-all duration-700 shadow-2xl hover:border-primary/40"
+              >
+                <div className="relative aspect-[4/5] overflow-hidden m-2.5 rounded-[2.25rem]">
+                  <img 
+                    src={product.images[0] || "https://images.unsplash.com/photo-1549490349-8643362247b5?w=500"} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700" />
+                  
+                  <div className="absolute top-5 left-5 luxury-gradient text-white text-[9px] font-black px-4 py-2 rounded-full shadow-2xl z-10 tracking-[0.2em] italic uppercase">
+                    {discountPercent}% OFF
+                  </div>
+                  
+                  <button className="absolute top-5 right-5 w-12 h-12 glass border border-white/10 rounded-2xl text-white flex items-center justify-center hover:bg-primary transition-all duration-500 z-10">
+                    <Heart size={18} className="group-hover:scale-110 transition-transform" />
+                  </button>
 
-                <div className="absolute bottom-6 left-6 right-6 z-20">
-                    <p className="text-white font-black text-lg tracking-tight leading-none mb-2 uppercase italic">{product.name}</p>
-                    <div className="flex items-center justify-between">
-                       <div className="flex items-center space-x-3">
-                          <span className="text-2xl font-black text-primary italic tracking-tighter">${product.salePrice}</span>
-                          <span className="text-[10px] text-white/20 font-black line-through italic">${product.price}</span>
-                       </div>
-                       <Button size="icon" className="w-12 h-12 rounded-xl luxury-gradient border-none shadow-2xl hover:scale-110 transition-transform">
-                          <ShoppingCart size={18} />
-                       </Button>
-                    </div>
+                  <div className="absolute bottom-6 left-6 right-6 z-20">
+                      <p className="text-white font-black text-sm tracking-tight leading-none mb-2 uppercase italic line-clamp-1">{product.name}</p>
+                      <div className="flex items-center justify-between">
+                         <div className="flex items-center space-x-3">
+                            <span className="text-2xl font-black text-primary italic tracking-tighter">${Number(product.flashSale.discountPrice).toFixed(2)}</span>
+                            <span className="text-[10px] text-white/20 font-black line-through italic">${Number(product.price).toFixed(2)}</span>
+                         </div>
+                         <Button size="icon" className="w-10 h-10 rounded-xl luxury-gradient border-none shadow-2xl hover:scale-110 transition-transform">
+                            <ShoppingCart size={16} />
+                         </Button>
+                      </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="px-8 pb-8 pt-2">
-                <div className="space-y-3">
-                   <div className="flex justify-between text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.3em] italic">
-                      <span>12 SLOTS REMAINING</span>
-                      <span className="text-primary">85% SECURED</span>
-                   </div>
-                   <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "85%" }}
-                        transition={{ duration: 1.5, delay: 0.8 }}
-                        className="h-full luxury-gradient rounded-full relative" 
-                      />
-                   </div>
+                <div className="px-8 pb-8 pt-2">
+                  <div className="space-y-3">
+                     <div className="flex justify-between text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.3em] italic">
+                        <span>LOCKED OFFER</span>
+                        <span className="text-primary">SYNCED</span>
+                     </div>
+                     <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          whileInView={{ width: "100%" }}
+                          transition={{ duration: 1.5, delay: 0.8 }}
+                          className="h-full luxury-gradient rounded-full relative" 
+                        />
+                     </div>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="mt-20 flex justify-center">
-           <Button variant="outline" className="h-16 px-12 rounded-2xl border-white/5 glass font-black tracking-[0.3em] text-[10px] uppercase hover:bg-white/5 flex items-center group shadow-2xl transition-all italic">
-              EXPLORE ALL OFFERS 
-              <ArrowRight size={16} className="ml-4 group-hover:translate-x-3 transition-transform duration-500" />
-           </Button>
+           <Link href="/marketplace">
+            <Button variant="outline" className="h-16 px-12 rounded-2xl border-white/5 glass font-black tracking-[0.3em] text-[10px] uppercase hover:bg-white/5 flex items-center group shadow-2xl transition-all italic">
+                EXPLORE ALL OFFERS 
+                <ArrowRight size={16} className="ml-4 group-hover:translate-x-3 transition-transform duration-500" />
+            </Button>
+           </Link>
         </div>
       </div>
     </section>

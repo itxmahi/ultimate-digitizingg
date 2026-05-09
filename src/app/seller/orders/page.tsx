@@ -1,17 +1,51 @@
 "use client";
 
-import React from "react";
-import { Search, Filter, ShoppingBag, Eye, Download } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Search, Filter, Eye, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const OrdersPage = () => {
-  const orders = [
-    { id: "#ORD-9281", customer: "Sarah Jenkins", date: "Oct 24, 2023", items: 2, total: "$45.00", status: "Completed" },
-    { id: "#ORD-9280", customer: "Michael Chen", date: "Oct 24, 2023", items: 1, total: "$15.00", status: "Processing" },
-    { id: "#ORD-9279", customer: "Emma Wilson", date: "Oct 23, 2023", items: 4, total: "$120.00", status: "Pending" },
-    { id: "#ORD-9278", customer: "James Rodriguez", date: "Oct 22, 2023", items: 1, total: "$25.00", status: "Completed" },
-    { id: "#ORD-9277", customer: "Lisa Taylor", date: "Oct 21, 2023", items: 3, total: "$85.00", status: "Cancelled" },
-  ];
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch("/api/seller/orders");
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setOrders(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const updateStatus = async (orderId: string, status: string) => {
+    try {
+      const response = await fetch("/api/seller/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, status }),
+      });
+      if (response.ok) {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const filteredOrders = orders.filter(o => 
+    o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (o.user?.email || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-12 pb-24">
@@ -39,6 +73,8 @@ const OrdersPage = () => {
               <input 
                 type="text" 
                 placeholder="SEARCH MANIFEST..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-white/[0.03] border border-white/5 rounded-2xl pl-14 pr-6 py-4 text-[11px] font-black tracking-[0.2em] uppercase focus:ring-4 ring-primary/10 transition-all outline-none italic placeholder:text-muted-foreground/10"
               />
            </div>
@@ -46,9 +82,6 @@ const OrdersPage = () => {
              <Button variant="outline" className="h-14 px-6 rounded-2xl glass border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all italic">
                <Filter size={16} className="mr-3 text-primary" />
                STATUS FILTER
-             </Button>
-             <Button variant="outline" className="h-14 px-6 rounded-2xl glass border-white/10 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all italic">
-               CHRONOLOGY
              </Button>
            </div>
         </div>
@@ -67,22 +100,42 @@ const OrdersPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {orders.map((order) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-20 text-center">
+                    <Loader2 size={40} className="animate-spin text-primary mx-auto mb-4" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40">Synchronizing Ledger...</p>
+                  </td>
+                </tr>
+              ) : filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-20 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/20 italic">No deployments found in manifest.</p>
+                  </td>
+                </tr>
+              ) : filteredOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-white/[0.02] transition-colors group">
-                  <td className="py-6 px-8 font-black text-sm tracking-tighter italic text-primary">{order.id}</td>
-                  <td className="py-6 px-8 text-[11px] font-black uppercase tracking-tight">{order.customer}</td>
-                  <td className="py-6 px-8 text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">{order.date}</td>
-                  <td className="py-6 px-8 text-[11px] font-black tracking-widest">{order.items} UNITS</td>
-                  <td className="py-6 px-8 text-sm font-black italic">{order.total}</td>
+                  <td className="py-6 px-8 font-black text-sm tracking-tighter italic text-primary">#{order.id.slice(-8).toUpperCase()}</td>
+                  <td className="py-6 px-8 text-[11px] font-black uppercase tracking-tight">{order.user?.name || order.user?.email || "Unknown"}</td>
+                  <td className="py-6 px-8 text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td className="py-6 px-8 text-[11px] font-black tracking-widest">{order.items.length} UNITS</td>
+                  <td className="py-6 px-8 text-sm font-black italic">${order.totalAmount.toFixed(2)}</td>
                   <td className="py-6 px-8">
-                    <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] italic border ${
-                      order.status === 'Completed' ? 'bg-chart-2/10 text-chart-2 border-chart-2/20' : 
-                      order.status === 'Processing' ? 'bg-primary/10 text-primary border-primary/20' :
-                      order.status === 'Pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
-                      'bg-destructive/10 text-destructive border-destructive/20'
-                    }`}>
-                      {order.status}
-                    </span>
+                    <select 
+                      value={order.status}
+                      onChange={(e) => updateStatus(order.id, e.target.value)}
+                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] italic border bg-transparent outline-none cursor-pointer ${
+                        order.status === 'COMPLETED' ? 'text-chart-2 border-chart-2/20' : 
+                        order.status === 'PROCESSING' ? 'text-primary border-primary/20' :
+                        order.status === 'PENDING' ? 'text-yellow-500 border-yellow-500/20' :
+                        'text-destructive border-destructive/20'
+                      }`}
+                    >
+                      <option value="PENDING" className="bg-[#0F172A]">PENDING</option>
+                      <option value="PROCESSING" className="bg-[#0F172A]">PROCESSING</option>
+                      <option value="COMPLETED" className="bg-[#0F172A]">COMPLETED</option>
+                      <option value="CANCELLED" className="bg-[#0F172A]">CANCELLED</option>
+                    </select>
                   </td>
                   <td className="py-6 px-8 text-right">
                     <Button variant="ghost" size="icon" className="w-12 h-12 rounded-xl glass border-white/10 text-muted-foreground hover:text-primary transition-all group-hover:scale-110 shadow-xl">

@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: "The world's most advanced marketplace for embroidery digitizing and custom stitching services.",
 };
 
+import Providers from "@/components/providers/SessionProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,11 +29,13 @@ export default function RootLayout({
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:100px_100px]" />
         </div>
 
-        <Navbar />
-        <main className="min-h-screen pt-20 relative">
-          {children}
-        </main>
-        <Footer />
+        <Providers>
+          <Navbar />
+          <main className="min-h-screen pt-20 relative">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

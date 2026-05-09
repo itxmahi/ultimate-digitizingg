@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Search, 
@@ -12,21 +12,41 @@ import {
   ShoppingCart,
   Heart,
   SlidersHorizontal,
-  Zap
+  Zap,
+  ArrowRight,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Marketplace = () => {
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
-  
-  const products = [
-    { id: 1, name: "Premium Floral Pattern", price: 49.99, salePrice: 19.99, rating: 4.9, reviews: 128, seller: "StitchPro", image: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=500&auto=format&fit=crop&q=60", category: "Floral", isFlashSale: true },
-    { id: 2, name: "Luxury Gold Crest", price: 89.99, salePrice: 34.99, rating: 4.8, reviews: 85, seller: "RoyalDesigns", image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&auto=format&fit=crop&q=60", category: "Emblems", isFlashSale: true },
-    { id: 3, name: "Cyberpunk Tech Stitch", price: 24.99, salePrice: null, rating: 5.0, reviews: 42, seller: "FutureArt", image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&auto=format&fit=crop&q=60", category: "Tech", isFlashSale: false },
-    { id: 4, name: "Vintage Royal Emblem", price: 59.99, salePrice: null, rating: 4.7, reviews: 210, seller: "HistoryStitch", image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500&auto=format&fit=crop&q=60", category: "Vintage", isFlashSale: false },
-    { id: 5, name: "Dragon Master Design", price: 79.99, salePrice: 49.99, rating: 4.9, reviews: 67, seller: "MythicArts", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=60", category: "Fantasy", isFlashSale: true },
-    { id: 6, name: "Corporate Logo Pack", price: 15.99, salePrice: null, rating: 4.6, reviews: 340, seller: "BizStitch", image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=500&auto=format&fit=crop&q=60", category: "Logo", isFlashSale: false },
-  ];
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("/api/products");
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setProducts(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.seller?.name || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="py-24 relative overflow-hidden">
@@ -58,6 +78,8 @@ const Marketplace = () => {
               <input 
                 type="text" 
                 placeholder="INITIALIZE ASSET SEARCH..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-white/[0.03] border border-white/5 rounded-[2rem] pl-16 pr-8 py-7 focus:ring-4 ring-primary/10 transition-all text-sm font-black uppercase tracking-widest outline-none shadow-inner"
               />
             </div>
@@ -107,7 +129,7 @@ const Marketplace = () => {
 
               <div>
                 <h3 className="font-black uppercase tracking-[0.4em] text-[10px] text-primary mb-8 italic flex items-center">
-                  <DollarSign size={14} className="mr-3" /> THRESHOLD
+                  <SlidersHorizontal size={14} className="mr-3" /> THRESHOLD
                 </h3>
                 <div className="space-y-6">
                   <div className="h-1.5 bg-white/5 rounded-full relative">
@@ -149,7 +171,7 @@ const Marketplace = () => {
           {/* Product Grid - "ASSETS" */}
           <div className="flex-1 space-y-12">
              <div className="flex justify-between items-center mb-12">
-                <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.4em] italic">DEPLOYING <span className="text-white">2,450</span> ACTIVE PROTOCOLS</p>
+                <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.4em] italic">DEPLOYING <span className="text-white">{filteredProducts.length}</span> ACTIVE PROTOCOLS</p>
                 <div className="flex items-center space-x-4">
                    <span className="text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] italic">ORDER BY:</span>
                    <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest p-0 h-auto hover:bg-transparent flex items-center text-primary italic">
@@ -159,7 +181,16 @@ const Marketplace = () => {
              </div>
 
              <div className={`grid gap-10 ${viewType === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-                {products.map((product) => (
+                {loading ? (
+                   <div className="col-span-full py-40 flex flex-col items-center justify-center space-y-6">
+                      <Loader2 size={60} className="animate-spin text-primary" />
+                      <p className="text-[11px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 italic animate-pulse">Synchronizing with global asset stream...</p>
+                   </div>
+                ) : filteredProducts.length === 0 ? (
+                  <div className="col-span-full py-40 text-center">
+                    <p className="text-[11px] font-black uppercase tracking-[0.5em] text-muted-foreground/20 italic">No assets detected in sector.</p>
+                  </div>
+                ) : filteredProducts.map((product) => (
                   <motion.div
                     key={product.id}
                     layout
@@ -170,12 +201,10 @@ const Marketplace = () => {
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     
                     <div className={`relative overflow-hidden bg-white/[0.02] ${viewType === 'list' ? 'w-64 h-64 rounded-[2.5rem] flex-shrink-0' : 'aspect-square'}`}>
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-3 transition-all duration-1000 grayscale group-hover:grayscale-0" />
-                      {product.isFlashSale && (
-                        <div className="absolute top-6 left-6 bg-primary text-white text-[9px] font-black px-4 py-1.5 rounded-full shadow-2xl z-10 uppercase tracking-[0.2em] flex items-center italic">
-                          <Zap size={10} className="mr-2 animate-pulse" fill="currentColor" /> ELITE DEAL
-                        </div>
-                      )}
+                      <img src={product.images?.[0] || "https://images.unsplash.com/photo-1549490349-8643362247b5?w=500&auto=format&fit=crop&q=60"} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-3 transition-all duration-1000 grayscale group-hover:grayscale-0" />
+                      <div className="absolute top-6 left-6 bg-primary text-white text-[9px] font-black px-4 py-1.5 rounded-full shadow-2xl z-10 uppercase tracking-[0.2em] flex items-center italic">
+                        <Zap size={10} className="mr-2 animate-pulse" fill="currentColor" /> ELITE ASSET
+                      </div>
                       <button className="absolute top-6 right-6 w-12 h-12 glass border border-white/10 rounded-2xl text-white hover:bg-primary transition-all opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 flex items-center justify-center">
                         <Heart size={18} />
                       </button>
@@ -186,22 +215,22 @@ const Marketplace = () => {
                         <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary bg-primary/10 px-4 py-1.5 rounded-full border border-primary/10 italic">{product.category}</span>
                         <div className="flex items-center text-yellow-500 bg-white/5 px-3 py-1 rounded-full border border-white/5">
                           <Star size={12} fill="currentColor" />
-                          <span className="ml-2 text-[10px] font-black">{product.rating}</span>
+                          <span className="ml-2 text-[10px] font-black">4.9</span>
                         </div>
                       </div>
-                      <h3 className="text-2xl font-black mb-2 tracking-tighter uppercase italic group-hover:text-primary transition-colors duration-500">{product.name}</h3>
-                      <p className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-widest mb-8 italic">ENGINEERED BY <span className="text-muted-foreground/80 hover:text-primary cursor-pointer transition-colors">{product.seller}</span></p>
+                      <h3 className="text-2xl font-black mb-2 tracking-tighter uppercase italic group-hover:text-primary transition-colors duration-500 line-clamp-1">{product.name}</h3>
+                      <p className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-widest mb-8 italic">ENGINEERED BY <span className="text-muted-foreground/80 hover:text-primary cursor-pointer transition-colors">{product.seller?.name || "ULTIMATE"}</span></p>
                       
                       <div className="flex items-center justify-between">
                          <div className="flex flex-col">
-                           {product.isFlashSale && product.salePrice ? (
-                             <>
-                               <span className="text-3xl font-black text-primary tracking-tighter italic">${product.salePrice}</span>
-                               <span className="text-[10px] text-muted-foreground/20 font-black line-through uppercase tracking-widest">${product.price}</span>
-                             </>
-                           ) : (
-                             <span className="text-3xl font-black tracking-tighter italic">${product.price}</span>
-                           )}
+                            {product.flashSale && product.flashSale.isActive ? (
+                              <div className="flex flex-col">
+                                <span className="text-3xl font-black tracking-tighter italic text-primary">${Number(product.flashSale.discountPrice).toFixed(2)}</span>
+                                <span className="text-[10px] text-muted-foreground/30 font-black line-through italic">${Number(product.price).toFixed(2)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-3xl font-black tracking-tighter italic text-primary">${Number(product.price).toFixed(2)}</span>
+                            )}
                          </div>
                          <Button className="h-14 px-8 rounded-2xl luxury-gradient border-none text-white shadow-2xl hover:scale-105 active:scale-95 transition-all">
                            <ShoppingCart size={18} className="mr-3" />

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Upload, 
   FileText, 
@@ -13,16 +13,102 @@ import {
   Clock,
   ShieldCheck,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  FileIcon,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const CustomStitch = () => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [formData, setFormData] = useState({
+    email: "",
+    stitchType: "Flat Industrial Standard",
+    fabricType: "Elite Cotton / Jersey",
+    size: "",
+    placement: "",
+    description: ""
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step < 3) {
+      nextStep();
+      return;
+    }
+
+    if (!formData.email) {
+      alert("Please provide your email protocol.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const data = new FormData();
+      data.append("email", formData.email);
+      data.append("description", formData.description);
+      data.append("stitchType", formData.stitchType);
+      data.append("fabricType", formData.fabricType);
+      data.append("size", formData.size);
+      if (selectedFile) {
+        data.append("file", selectedFile);
+      }
+
+      const response = await fetch("/api/custom-stitch", {
+        method: "POST",
+        body: data,
+      });
+
+      if (response.ok) {
+        alert("PROTOCOL DEPLOYED SUCCESSFULLY. CHECK YOUR EMAIL.");
+        // Reset form
+        setStep(1);
+        setSelectedFile(null);
+        setFormData({
+          email: "",
+          stitchType: "Flat Industrial Standard",
+          fabricType: "Elite Cotton / Jersey",
+          size: "",
+          placement: "",
+          description: ""
+        });
+      } else {
+        alert("PROTOCOL FAILURE. RE-INITIALIZE REQUEST.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("SYSTEM ERROR. DEPLOYMENT TERMINATED.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden selection:bg-primary selection:text-white">
@@ -149,7 +235,7 @@ const CustomStitch = () => {
                {/* Internal Background Glow */}
                <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
                
-               <form className="flex-1 flex flex-col space-y-16 relative z-10">
+               <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-16 relative z-10">
                   {step === 1 && (
                     <motion.div 
                       initial={{ opacity: 0, x: 50 }} 
@@ -166,13 +252,61 @@ const CustomStitch = () => {
                        </div>
                        
                        <div className="relative group">
+                          <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleFileChange} 
+                            className="hidden" 
+                            accept="image/*,.pdf,.dst,.pes,.art"
+                          />
                           <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 to-chart-4/30 rounded-[4rem] blur-[30px] opacity-0 group-hover:opacity-50 transition duration-1000" />
-                          <div className="relative border-[3px] border-dashed border-white/5 bg-white/[0.02] rounded-[4rem] p-24 text-center hover:border-primary/40 transition-all duration-700 cursor-pointer group flex flex-col items-center justify-center">
-                             <div className="w-28 h-28 glass border border-white/10 rounded-[2.5rem] flex items-center justify-center mb-10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-[0_30px_60px_rgba(0,0,0,0.4)]">
-                                <Upload size={48} className="text-primary" />
-                             </div>
-                             <h3 className="text-3xl font-black mb-4 tracking-tighter uppercase italic">Deploy Files Here</h3>
-                             <p className="text-muted-foreground/40 font-black uppercase tracking-[0.3em] text-[10px]">Cloud Transfer or Local Protocol</p>
+                          <div 
+                            onClick={triggerFileInput}
+                            className="relative border-[3px] border-dashed border-white/5 bg-white/[0.02] rounded-[4rem] p-24 text-center hover:border-primary/40 transition-all duration-700 cursor-pointer group flex flex-col items-center justify-center overflow-hidden"
+                          >
+                             <AnimatePresence mode="wait">
+                               {!selectedFile ? (
+                                 <motion.div
+                                   key="empty"
+                                   initial={{ opacity: 0, y: 10 }}
+                                   animate={{ opacity: 1, y: 0 }}
+                                   exit={{ opacity: 0, y: -10 }}
+                                   className="flex flex-col items-center"
+                                 >
+                                   <div className="w-28 h-28 glass border border-white/10 rounded-[2.5rem] flex items-center justify-center mb-10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-[0_30px_60px_rgba(0,0,0,0.4)]">
+                                      <Upload size={48} className="text-primary" />
+                                   </div>
+                                   <h3 className="text-3xl font-black mb-4 tracking-tighter uppercase italic">Deploy Files Here</h3>
+                                   <p className="text-muted-foreground/40 font-black uppercase tracking-[0.3em] text-[10px]">Cloud Transfer or Local Protocol</p>
+                                 </motion.div>
+                               ) : (
+                                 <motion.div
+                                   key="selected"
+                                   initial={{ opacity: 0, scale: 0.9 }}
+                                   animate={{ opacity: 1, scale: 1 }}
+                                   className="flex flex-col items-center space-y-6"
+                                 >
+                                   <div className="relative">
+                                     <div className="w-32 h-32 glass border border-primary/30 rounded-[2.5rem] flex items-center justify-center shadow-2xl">
+                                        <FileIcon size={56} className="text-primary" />
+                                     </div>
+                                     <button 
+                                       onClick={removeFile}
+                                       className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-destructive text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-20"
+                                     >
+                                       <X size={20} />
+                                     </button>
+                                   </div>
+                                   <div className="text-center">
+                                      <h3 className="text-2xl font-black tracking-tighter uppercase italic text-primary">{selectedFile.name}</h3>
+                                      <p className="text-muted-foreground/40 font-black uppercase tracking-[0.3em] text-[10px]">
+                                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • READY FOR ANALYSIS
+                                      </p>
+                                   </div>
+                                 </motion.div>
+                               )}
+                             </AnimatePresence>
+
                              <div className="mt-12 flex items-center space-x-4 px-6 py-3 glass border border-white/5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 shadow-2xl">
                                 <Zap size={14} className="text-primary animate-pulse" /> MAX PAYLOAD: 128MB
                              </div>
@@ -201,7 +335,12 @@ const CustomStitch = () => {
                              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 ml-2 flex items-center">
                                <Palette size={12} className="mr-3 text-primary" /> Technology Model
                              </label>
-                             <select className="w-full h-20 bg-white/5 border border-white/5 rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[11px] text-foreground focus:ring-4 ring-primary/10 transition-all outline-none appearance-none cursor-pointer hover:bg-white/10 shadow-inner">
+                             <select 
+                                name="stitchType"
+                                value={formData.stitchType}
+                                onChange={handleInputChange}
+                                className="w-full h-20 bg-white/5 border border-white/5 rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[11px] text-foreground focus:ring-4 ring-primary/10 transition-all outline-none appearance-none cursor-pointer hover:bg-white/10 shadow-inner"
+                              >
                                 <option>Flat Industrial Standard</option>
                                 <option>3D Puff / High Profile</option>
                                 <option>Laser Cut Applique</option>
@@ -212,7 +351,12 @@ const CustomStitch = () => {
                              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 ml-2 flex items-center">
                                <FileText size={12} className="mr-3 text-chart-4" /> Base Material
                              </label>
-                             <select className="w-full h-20 bg-white/5 border border-white/5 rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[11px] text-foreground focus:ring-4 ring-primary/10 transition-all outline-none appearance-none cursor-pointer hover:bg-white/10 shadow-inner">
+                             <select 
+                                name="fabricType"
+                                value={formData.fabricType}
+                                onChange={handleInputChange}
+                                className="w-full h-20 bg-white/5 border border-white/5 rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[11px] text-foreground focus:ring-4 ring-primary/10 transition-all outline-none appearance-none cursor-pointer hover:bg-white/10 shadow-inner"
+                              >
                                 <option>Elite Cotton / Jersey</option>
                                 <option>Performance Pique</option>
                                 <option>Industrial Denim</option>
@@ -223,13 +367,27 @@ const CustomStitch = () => {
                              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 ml-2 flex items-center">
                                <Maximize size={12} className="mr-3 text-chart-2" /> Master Dimension
                              </label>
-                             <input type="text" placeholder="E.G. 150MM WIDTH" className="w-full h-20 bg-white/5 border border-white/5 rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[11px] focus:ring-4 ring-primary/10 transition-all outline-none shadow-inner placeholder:text-muted-foreground/10" />
+                             <input 
+                                name="size"
+                                value={formData.size}
+                                onChange={handleInputChange}
+                                type="text" 
+                                placeholder="E.G. 150MM WIDTH" 
+                                className="w-full h-20 bg-white/5 border border-white/5 rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[11px] focus:ring-4 ring-primary/10 transition-all outline-none shadow-inner placeholder:text-muted-foreground/10" 
+                              />
                           </div>
                           <div className="space-y-4">
                              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 ml-2 flex items-center">
                                <Maximize size={12} className="mr-3 text-primary" /> Surface Placement
                              </label>
-                             <input type="text" placeholder="E.G. HAT FRONT CENTER" className="w-full h-20 bg-white/5 border border-white/5 rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[11px] focus:ring-4 ring-primary/10 transition-all outline-none shadow-inner placeholder:text-muted-foreground/10" />
+                             <input 
+                                name="placement"
+                                value={formData.placement}
+                                onChange={handleInputChange}
+                                type="text" 
+                                placeholder="E.G. HAT FRONT CENTER" 
+                                className="w-full h-20 bg-white/5 border border-white/5 rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[11px] focus:ring-4 ring-primary/10 transition-all outline-none shadow-inner placeholder:text-muted-foreground/10" 
+                              />
                           </div>
                        </div>
                        
@@ -237,7 +395,13 @@ const CustomStitch = () => {
                           <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 ml-2 flex items-center">
                             Mechanical Instructions & Color Protocols
                           </label>
-                          <textarea placeholder="DEFINE GRADIENTS, THREAD CODES, OR SPECIAL DENSITY PARAMETERS..." className="w-full h-48 bg-white/5 border border-white/5 rounded-[2rem] px-10 py-8 font-black uppercase tracking-widest text-[11px] focus:ring-4 ring-primary/10 transition-all outline-none resize-none placeholder:text-muted-foreground/10 hover:bg-white/10 shadow-inner"></textarea>
+                          <textarea 
+                            name="description"
+                            value={formData.description}
+                            onChange={handleInputChange}
+                            placeholder="DEFINE GRADIENTS, THREAD CODES, OR SPECIAL DENSITY PARAMETERS..." 
+                            className="w-full h-48 bg-white/5 border border-white/5 rounded-[2rem] px-10 py-8 font-black uppercase tracking-widest text-[11px] focus:ring-4 ring-primary/10 transition-all outline-none resize-none placeholder:text-muted-foreground/10 hover:bg-white/10 shadow-inner"
+                          ></textarea>
                        </div>
                     </motion.div>
                   )}
@@ -257,8 +421,22 @@ const CustomStitch = () => {
                        <div className="space-y-6">
                           <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic">READY FOR <span className="text-gradient">DEPLOYMENT.</span></h2>
                           <p className="text-muted-foreground font-medium text-2xl max-w-2xl mx-auto italic leading-relaxed">
-                            Your protocol is verified. Our master digitizers will now transform this into a masterpiece.
+                            Your protocol is verified. Provide your email to initialize your account and deploy the request.
                           </p>
+                       </div>
+
+                       <div className="max-w-xl mx-auto space-y-6">
+                          <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 ml-2 flex items-center justify-center">
+                            CLIENT IDENTIFICATION / EMAIL PROTOCOL
+                          </label>
+                          <input 
+                             type="email" 
+                             name="email"
+                             value={formData.email}
+                             onChange={handleInputChange}
+                             placeholder="YOUR-EMAIL@GMAIL.COM" 
+                             className="w-full h-24 bg-white/5 border border-primary/20 rounded-[2rem] px-10 text-center font-black uppercase tracking-widest text-xl focus:ring-8 ring-primary/5 transition-all outline-none shadow-2xl placeholder:text-muted-foreground/10"
+                          />
                        </div>
                        
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 text-left">
@@ -301,10 +479,11 @@ const CustomStitch = () => {
                        </Button>
                      ) : (
                        <Button 
-                        type="button" 
-                        className="rounded-[2.5rem] h-24 px-20 luxury-gradient border-none text-white font-black uppercase tracking-[0.4em] text-[10px] shadow-[0_30px_60px_rgba(0,0,0,0.5)] hover:scale-105 active:scale-95 transition-all italic"
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="rounded-[2.5rem] h-24 px-20 luxury-gradient border-none text-white font-black uppercase tracking-[0.4em] text-[10px] shadow-[0_30px_60px_rgba(0,0,0,0.5)] hover:scale-105 active:scale-95 transition-all italic disabled:opacity-50"
                        >
-                        DEPLOY FINAL REQUEST <Send size={20} className="ml-4" />
+                        {isSubmitting ? "DEPLOYING PROTOCOL..." : "DEPLOY FINAL REQUEST"} <Send size={20} className="ml-4" />
                        </Button>
                      )}
                   </div>

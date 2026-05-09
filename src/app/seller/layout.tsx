@@ -19,9 +19,11 @@ import {
   LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSession, signOut } from "next-auth/react";
 
 const SellerLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const menuItems = [
@@ -88,7 +90,10 @@ const SellerLayout = ({ children }: { children: React.ReactNode }) => {
               <Settings size={20} />
               {isSidebarOpen && <span className="font-black text-[11px] uppercase tracking-widest leading-none">Settings</span>}
             </Link>
-            <button className="w-full flex items-center space-x-4 px-5 py-4 text-destructive/60 hover:text-destructive hover:bg-destructive/5 rounded-2xl transition-all duration-500">
+            <button 
+              onClick={() => signOut()}
+              className="w-full flex items-center space-x-4 px-5 py-4 text-destructive/60 hover:text-destructive hover:bg-destructive/5 rounded-2xl transition-all duration-500"
+            >
               <LogOut size={20} />
               {isSidebarOpen && <span className="font-black text-[11px] uppercase tracking-widest leading-none">Logout</span>}
             </button>
@@ -125,9 +130,11 @@ const SellerLayout = ({ children }: { children: React.ReactNode }) => {
                 <span className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full animate-ping" />
                 <span className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full" />
               </button>
-              <button className="w-12 h-12 glass border border-white/10 rounded-2xl flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-500 shadow-xl">
-                <PlusCircle size={18} />
-              </button>
+              <Link href="/seller/products/new">
+                <button className="w-12 h-12 glass border border-white/10 rounded-2xl flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-500 shadow-xl">
+                  <PlusCircle size={18} />
+                </button>
+              </Link>
             </div>
 
             <div className="h-10 w-[1px] bg-white/10" />
@@ -135,10 +142,10 @@ const SellerLayout = ({ children }: { children: React.ReactNode }) => {
             <div className="flex items-center space-x-4 cursor-pointer group p-1.5 pr-5 rounded-2xl hover:bg-white/5 transition-all duration-500">
                <div className="relative">
                   <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop" alt="User" className="relative z-10 w-12 h-12 rounded-2xl object-cover ring-2 ring-white/10 group-hover:ring-primary/40 transition-all duration-500 shadow-2xl" />
+                  <img src={session?.user?.image || "https://i.pravatar.cc/100"} alt="User" className="relative z-10 w-12 h-12 rounded-2xl object-cover ring-2 ring-white/10 group-hover:ring-primary/40 transition-all duration-500 shadow-2xl" />
                </div>
                <div className="flex flex-col text-left">
-                  <p className="text-xs font-black tracking-tight leading-none">JOHN DIGITIZER</p>
+                  <p className="text-xs font-black tracking-tight leading-none uppercase">{session?.user?.name || "STUDIO USER"}</p>
                   <div className="flex items-center mt-1.5">
                     <div className="w-1.5 h-1.5 bg-chart-2 rounded-full mr-2" />
                     <span className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em]">Elite Partner</span>
