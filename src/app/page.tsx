@@ -133,38 +133,48 @@ export default function Home() {
       {/* Ultra-Premium Cinematic CTA */}
       <section className="py-40 md:py-60 relative overflow-hidden">
         <div className="container max-w-[1400px] mx-auto px-6">
-          <div className="relative rounded-[4rem] overflow-hidden group shadow-[0_50px_100px_rgba(0,0,0,0.6)]">
+          <div className="relative rounded-[5rem] overflow-hidden group shadow-[0_80px_150px_rgba(0,0,0,0.8)] border border-white/5">
             <div className="absolute inset-0 z-0">
-               <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1600&auto=format&fit=crop&q=80" className="w-full h-full object-cover grayscale opacity-20 transition-all duration-2000 group-hover:scale-110 group-hover:grayscale-0" />
-               <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-primary/30 mix-blend-overlay" />
+               <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1600&auto=format&fit=crop&q=80" className="w-full h-full object-cover grayscale opacity-10 transition-all duration-2000 group-hover:scale-110 group-hover:grayscale-0 group-hover:opacity-30" />
+               <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-[#020617]/95 to-primary/20" />
             </div>
 
-            <div className="relative z-10 p-16 md:p-32 text-center text-white">
+            <div className="relative z-10 p-20 md:p-40 text-center">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                className="max-w-4xl mx-auto space-y-12"
+                viewport={{ once: true }}
+                className="max-w-5xl mx-auto space-y-16"
               >
-                <div className="space-y-6">
-                  <h2 className="text-5xl md:text-8xl lg:text-[10rem] font-black tracking-tighter leading-[0.8] uppercase italic">
-                    JOIN THE <br /><span className="text-gradient">REVOLUTION.</span>
+                <div className="space-y-8">
+                  <div className="inline-flex items-center space-x-4 px-6 py-2 rounded-full glass border border-white/10 mb-4">
+                     <Zap size={14} className="text-primary" fill="currentColor" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.5em] italic text-primary">ELITE STATUS PENDING</span>
+                  </div>
+                  <h2 className="text-6xl md:text-8xl lg:text-[11rem] font-black tracking-tighter leading-[0.75] uppercase italic text-white">
+                    JOIN THE <br /><span className="text-gradient NOT-italic">REVOLUTION.</span>
                   </h2>
-                  <p className="text-lg md:text-xl text-white/40 font-medium max-w-2xl mx-auto leading-relaxed italic uppercase">
-                    Step into the future of digital embroidery. Experience the world's most advanced digitizing ecosystem built for elite performance.
+                  <p className="text-lg md:text-2xl text-white/30 font-black max-w-2xl mx-auto leading-relaxed italic uppercase tracking-tight">
+                    Step into the future of digital embroidery architecture. Experience the world's most advanced digitizing ecosystem built for elite performance.
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-10">
                   <Link href="/register" className="w-full sm:w-auto group">
-                    <Button size="lg" className="w-full h-16 px-12 bg-white text-black hover:bg-white/90 rounded-2xl text-[11px] font-black shadow-2xl transition-all duration-500 uppercase italic tracking-widest">
+                    <Button size="lg" className="w-full h-24 px-16 bg-white text-black hover:bg-white/90 rounded-[2.5rem] text-[12px] font-black shadow-2xl transition-all duration-500 uppercase italic tracking-[0.4em] group-hover:scale-105 active:scale-95">
                       GET STARTED
+                      <ArrowRight size={18} className="ml-4 group-hover:translate-x-3 transition-transform" />
                     </Button>
                   </Link>
-                  <Link href="/custom-stitch" className="w-full sm:w-auto">
-                    <Button size="lg" variant="outline" className="w-full h-16 px-12 border-white/10 bg-white/5 hover:bg-white/10 rounded-2xl text-[11px] font-black text-white backdrop-blur-3xl transition-all duration-500 uppercase italic tracking-widest">
+                  <Link href="/custom-stitch" className="w-full sm:w-auto group">
+                    <Button size="lg" variant="outline" className="w-full h-24 px-16 border-white/10 bg-white/5 hover:bg-white/10 rounded-[2.5rem] text-[12px] font-black text-white backdrop-blur-3xl transition-all duration-500 uppercase italic tracking-[0.4em] group-hover:border-white/20 active:scale-95">
                       ELITE SERVICES
                     </Button>
                   </Link>
+                </div>
+
+                <div className="pt-12">
+                   <p className="text-[10px] font-black text-white/10 uppercase tracking-[0.6em] italic">Authorized for professional use only // 2026 Ultimate Digitizing</p>
                 </div>
               </motion.div>
             </div>
