@@ -1,69 +1,47 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
 
-export async function GET() {
+export const runtime = "nodejs";
+
+interface CustomerData {
+  id: string;
+  name: string | null;
+  email: string | null;
+  totalOrders: number;
+  totalSpent: string;
+  lastOrder: Date | null;
+  status: string;
+}
+
+export async function GET(): Promise<NextResponse<CustomerData[] | { error: string }>> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const seller = await prisma.seller.findUnique({
-      where: { userId: session.user.id }
-    });
-
-    if (!seller) {
-      return NextResponse.json({ error: "Not a seller" }, { status: 403 });
-    }
-
-    // Get unique customers who ordered items from this seller
-    const customers = await prisma.user.findMany({
-      where: {
-        orders: {
-          some: {
-            items: {
-              some: {
-                product: {
-                  sellerId: seller.id
-                }
-              }
-            }
-          }
-        }
+    // Temporarily return mock data to isolate crypto module issue
+    // TODO: Re-enable Prisma and auth once crypto issue is resolved
+    
+    const mockCustomers: CustomerData[] = [
+      {
+        id: "1",
+        name: "John Doe",
+        email: "john@example.com",
+        totalOrders: 5,
+        totalSpent: "$250.00",
+        lastOrder: new Date(),
+        status: "Active"
       },
-      include: {
-        orders: {
-          where: {
-            items: {
-              some: {
-                product: {
-                  sellerId: seller.id
-                }
-              }
-            }
-          },
-          orderBy: { createdAt: "desc" }
-        }
+      {
+        id: "2",
+        name: "Jane Smith",
+        email: "jane@example.com",
+        totalOrders: 3,
+        totalSpent: "$150.00",
+        lastOrder: new Date(Date.now() - 86400000),
+        status: "Active"
       }
-    });
+    ];
 
-    const customerData = customers.map(user => {
-      const totalSpent = user.orders.reduce((sum, o) => sum + o.totalAmount, 0);
-      return {
-        id: user.id,
-        name: user.name || user.email,
-        email: user.email,
-        totalOrders: user.orders.length,
-        totalSpent: `$${totalSpent.toFixed(2)}`,
-        lastOrder: user.orders[0]?.createdAt || null,
-        status: "Active" // Mock status
-      };
-    });
-
-    return NextResponse.json(customerData);
+    return NextResponse.json(mockCustomers);
   } catch (error) {
     console.error("Seller customers fetch error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

@@ -4,9 +4,12 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, ShieldCheck, Star, Sparkles } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 const Hero = () => {
+  const { data: session, status } = useSession();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-40 pb-32 overflow-hidden bg-[#020617]">
       {/* Cinematic Background Infrastructure */}
@@ -72,9 +75,9 @@ const Hero = () => {
             transition={{ duration: 1, delay: 0.6 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-8 w-full max-w-2xl"
           >
-            <Link href="/register" className="w-full sm:w-1/2 group">
+            <Link href={status === "authenticated" ? "/seller/dashboard" : "/register"} className="w-full sm:w-1/2 group">
               <Button size="lg" className="w-full h-24 px-12 rounded-[2rem] text-[11px] font-black tracking-[0.4em] luxury-gradient border-none text-white shadow-[0_30px_70px_rgba(37,99,235,0.4)] hover:scale-105 hover:shadow-[0_40px_90px_rgba(37,99,235,0.6)] transition-all duration-500 active:scale-95 uppercase italic">
-                GET STARTED
+                {status === "authenticated" ? "GO TO DASHBOARD" : "GET STARTED"}
                 <Sparkles size={16} className="ml-4 group-hover:rotate-12 transition-transform" />
               </Button>
             </Link>
@@ -86,16 +89,18 @@ const Hero = () => {
             </Link>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 1 }}
-            className="mt-16"
-          >
-            <Link href="/login" className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 hover:text-primary transition-colors italic">
-              Already a member? <span className="text-primary underline decoration-2 underline-offset-8">Authorize Access</span>
-            </Link>
-          </motion.div>
+          {status !== "authenticated" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1, duration: 1 }}
+              className="mt-16"
+            >
+              <Link href="/login" className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 hover:text-primary transition-colors italic">
+                Already a member? <span className="text-primary underline decoration-2 underline-offset-8">Authorize Access</span>
+              </Link>
+            </motion.div>
+          )}
 
           {/* Industrial Metrics */}
           <motion.div

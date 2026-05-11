@@ -4,11 +4,14 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, User, Menu, X, Search, Sparkles, Zap, ArrowRight } from "lucide-react";
+import { ShoppingCart, User, Menu, X, Search, Sparkles, Zap, ArrowRight, LogOut, LayoutDashboard, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSession, signOut } from "next-auth/react";
 
 const Navbar = () => {
+  const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hideAnnouncement, setHideAnnouncement] = useState(false);
   const pathname = usePathname();
@@ -161,16 +164,78 @@ const Navbar = () => {
                 </Link>
               </div>
               <div className="h-10 w-[1px] bg-white/10" />
-              <div className="flex items-center space-x-4">
-                <Link href="/login">
-                  <Button variant="ghost" className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest text-muted-foreground/80 hover:text-primary transition-colors italic">LOG IN</Button>
-                </Link>
-                <Link href="/register">
-                  <Button className="h-14 px-10 rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] luxury-gradient border-none text-white shadow-[0_15px_30px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95 transition-all italic">
-                    GET STARTED
-                  </Button>
-                </Link>
-              </div>
+              
+              {status === "authenticated" ? (
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="flex items-center space-x-4 glass border-white/10 pl-2 pr-5 py-2 rounded-2xl hover:border-primary/40 transition-all duration-500 group"
+                  >
+                    <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 group-hover:border-primary/40 transition-all">
+                      {session.user?.image ? (
+                        <img src={session.user.image} alt={session.user.name || "User"} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black">
+                          {session.user?.email?.[0].toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-[10px] font-black text-white uppercase tracking-wider truncate max-w-[120px]">
+                        {session.user?.name || "Member"}
+                      </span>
+                      <span className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        {session.user?.email}
+                      </span>
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-4 w-72 glass border-white/10 rounded-[2rem] p-4 shadow-[0_40px_80px_rgba(0,0,0,0.8)] backdrop-blur-3xl z-[100]"
+                      >
+                        <div className="p-4 border-b border-white/5 mb-2">
+                           <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1 italic">AUTHORIZED SESSION</p>
+                           <p className="text-[12px] font-black text-white truncate uppercase italic">{session.user?.email}</p>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <Link href="/seller/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
+                            <LayoutDashboard size={16} className="text-muted-foreground/60 group-hover:text-primary" />
+                            <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">DASHBOARD</span>
+                          </Link>
+                          <Link href="/settings" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
+                            <Settings size={16} className="text-muted-foreground/60 group-hover:text-primary" />
+                            <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">SETTINGS</span>
+                          </Link>
+                          <button 
+                            onClick={() => signOut()}
+                            className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-red-500/10 transition-colors group"
+                          >
+                            <LogOut size={16} className="text-muted-foreground/60 group-hover:text-red-500" />
+                            <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-red-500 uppercase tracking-widest italic">TERMINATE SESSION</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <Link href="/login">
+                    <Button variant="ghost" className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest text-muted-foreground/80 hover:text-primary transition-colors italic">LOG IN</Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button className="h-14 px-10 rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] luxury-gradient border-none text-white shadow-[0_15px_30px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95 transition-all italic">
+                      GET STARTED
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -245,21 +310,57 @@ const Navbar = () => {
                 </div>
 
                 <div className="pt-10 mt-10 border-t border-white/5 space-y-6 relative z-10">
-                  <div className="grid grid-cols-2 gap-6">
-                    <Link href="/login" onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest border-white/10 bg-white/5 shadow-xl italic">LOG IN</Button>
-                    </Link>
-                    <Link href="/cart" onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest border-white/10 bg-white/5 flex items-center justify-center shadow-xl italic">
-                        CART
-                      </Button>
-                    </Link>
-                  </div>
-                  <Link href="/register" onClick={() => setIsOpen(false)}>
-                    <Button className="w-full h-20 rounded-[2rem] luxury-gradient border-none text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">
-                      GET STARTED FREE
-                    </Button>
-                  </Link>
+                  {status === "authenticated" ? (
+                    <div className="space-y-6">
+                      <div className="glass p-6 rounded-[2rem] border-white/10 flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10">
+                          {session.user?.image ? (
+                            <img src={session.user.image} alt={session.user.name || ""} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black">
+                              {session.user?.email?.[0].toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="text-[10px] font-black text-white uppercase tracking-wider truncate">{session.user?.name || "Member"}</span>
+                          <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest truncate">{session.user?.email}</span>
+                        </div>
+                      </div>
+                      <Link href="/seller/dashboard" onClick={() => setIsOpen(false)}>
+                        <Button className="w-full h-20 rounded-[2rem] luxury-gradient border-none text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">
+                          DASHBOARD
+                        </Button>
+                      </Link>
+                      <button 
+                        onClick={() => {
+                          signOut();
+                          setIsOpen(false);
+                        }}
+                        className="w-full h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest border border-red-500/20 bg-red-500/5 text-red-500 italic"
+                      >
+                        SIGN OUT
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-6">
+                        <Link href="/login" onClick={() => setIsOpen(false)}>
+                          <Button variant="outline" className="w-full h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest border-white/10 bg-white/5 shadow-xl italic">LOG IN</Button>
+                        </Link>
+                        <Link href="/cart" onClick={() => setIsOpen(false)}>
+                          <Button variant="outline" className="w-full h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest border-white/10 bg-white/5 flex items-center justify-center shadow-xl italic">
+                            CART
+                          </Button>
+                        </Link>
+                      </div>
+                      <Link href="/register" onClick={() => setIsOpen(false)}>
+                        <Button className="w-full h-20 rounded-[2rem] luxury-gradient border-none text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">
+                          GET STARTED FREE
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </motion.div>
             </>

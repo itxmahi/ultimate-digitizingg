@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth-simple";
+
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
