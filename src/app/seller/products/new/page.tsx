@@ -21,7 +21,9 @@ const AddProductPage = () => {
     discountPrice: "",
     category: "SELECT SECTOR",
     tags: "",
-    flashSale: false,
+    isFlashSale: false,
+    discountPercentage: "",
+    stitchCount: "",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -86,7 +88,11 @@ const AddProductPage = () => {
         body: JSON.stringify({
           ...formData,
           price: parseFloat(formData.price),
-          discountPrice: formData.discountPrice ? parseFloat(formData.discountPrice) : null,
+          originalPrice: parseFloat(formData.price),
+          discountedPrice: formData.isFlashSale && formData.discountPercentage ? parseFloat(formData.price) * (1 - parseInt(formData.discountPercentage) / 100) : parseFloat(formData.price),
+          isFlashSale: formData.isFlashSale,
+          discountPercentage: formData.isFlashSale ? parseInt(formData.discountPercentage) : null,
+          stitchCount: formData.stitchCount ? parseInt(formData.stitchCount) : null,
           images: imageUrls,
           // We'll need a way to get the sellerId. For now, let's assume the API handles it from session
           // or we pass it if we have it.
@@ -270,9 +276,9 @@ const AddProductPage = () => {
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input 
-                  name="flashSale"
+                  name="isFlashSale"
                   type="checkbox" 
-                  checked={formData.flashSale}
+                  checked={formData.isFlashSale}
                   onChange={handleInputChange}
                   className="sr-only peer" 
                 />
@@ -280,20 +286,27 @@ const AddProductPage = () => {
               </label>
             </div>
 
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">DISCOUNTED VALUATION (USD)</label>
-              <div className="relative group">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-chart-4">$</span>
-                <input 
-                  name="discountPrice"
-                  value={formData.discountPrice}
-                  onChange={handleInputChange}
-                  type="number" 
-                  placeholder="0.00" 
-                  className="w-full bg-white/[0.03] border border-white/5 rounded-[1.5rem] pl-12 pr-8 py-6 text-xl font-black tracking-tighter focus:ring-4 ring-chart-4/10 transition-all outline-none shadow-inner italic"
-                />
+            {formData.isFlashSale && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">DISCOUNT PERCENTAGE (%)</label>
+                <div className="relative group">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-chart-4">%</span>
+                  <input 
+                    name="discountPercentage"
+                    value={formData.discountPercentage}
+                    onChange={handleInputChange}
+                    type="number" 
+                    placeholder="20" 
+                    className="w-full bg-white/[0.03] border border-white/5 rounded-[1.5rem] pl-12 pr-8 py-6 text-xl font-black tracking-tighter focus:ring-4 ring-chart-4/10 transition-all outline-none shadow-inner italic"
+                  />
+                </div>
+                {formData.price && formData.discountPercentage && (
+                  <p className="text-[10px] font-black text-chart-4 uppercase tracking-widest italic ml-2">
+                    Final Price: ${(parseFloat(formData.price) * (1 - parseInt(formData.discountPercentage) / 100)).toFixed(2)}
+                  </p>
+                )}
               </div>
-            </div>
+            )}
           </div>
 
           <div className="glass p-12 rounded-[3.5rem] border border-white/5 space-y-10">
@@ -302,6 +315,18 @@ const AddProductPage = () => {
                <h2 className="text-2xl font-black tracking-tight uppercase italic">HIERARCHY</h2>
             </div>
             
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">STITCH COUNT</label>
+              <input 
+                name="stitchCount"
+                value={formData.stitchCount}
+                onChange={handleInputChange}
+                type="number" 
+                placeholder="E.G. 12500" 
+                className="w-full bg-white/[0.03] border border-white/5 rounded-[1.5rem] px-8 py-6 text-sm font-black uppercase tracking-widest focus:ring-4 ring-primary/10 transition-all outline-none shadow-inner placeholder:text-muted-foreground/20"
+              />
+            </div>
+
             <div className="space-y-4">
               <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">ASSET CATEGORY</label>
               <div className="relative group">

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, redirect } from "next/navigation";
 import { 
   LayoutDashboard, 
   Package, 
@@ -16,15 +16,24 @@ import {
   Bell,
   Search,
   ChevronRight,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession, signOut } from "next-auth/react";
 
 const SellerLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  if (status === "loading") {
+    return <div className="min-h-screen bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  }
+
+  if (!session || session.user?.role !== "SELLER") {
+    redirect("/");
+  }
 
   const menuItems = [
     { name: "Dashboard", href: "/seller/dashboard", icon: <LayoutDashboard size={20} /> },

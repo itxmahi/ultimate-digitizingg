@@ -43,9 +43,11 @@ export async function POST(req: Request) {
       price, 
       category, 
       images, 
-      stitchFile, 
-      flashSale, 
-      discountPrice 
+      stitchCount,
+      isFlashSale, 
+      discountPercentage,
+      originalPrice,
+      discountedPrice
     } = body;
 
     // Create the product
@@ -54,25 +56,15 @@ export async function POST(req: Request) {
         name,
         description,
         price,
+        originalPrice: originalPrice || price,
+        discountedPrice: discountedPrice || price,
+        isFlashSale: isFlashSale || false,
+        discountPercentage: discountPercentage || null,
         category,
         sellerId: seller.id,
         images,
-        stitchFile,
-        // If flashSale is true, we create the FlashSale record
-        ...(flashSale && discountPrice ? {
-          flashSale: {
-            create: {
-              discountPrice,
-              startTime: new Date(),
-              endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days
-              isActive: true
-            }
-          }
-        } : {})
+        stitchCount: stitchCount ? parseInt(stitchCount) : null,
       },
-      include: {
-        flashSale: true
-      }
     });
 
     return NextResponse.json(product, { status: 201 });

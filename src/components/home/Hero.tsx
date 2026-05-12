@@ -75,9 +75,18 @@ const Hero = () => {
             transition={{ duration: 1, delay: 0.6 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-8 w-full max-w-2xl"
           >
-            <Link href={status === "authenticated" ? "/seller/dashboard" : "/register"} className="w-full sm:w-1/2 group">
+            <Link 
+              href={
+                status === "unauthenticated" 
+                  ? "/register" 
+                  : session?.user?.role === "SELLER" 
+                    ? "/seller/dashboard" 
+                    : "/seller/onboarding"
+              } 
+              className="w-full sm:w-1/2 group"
+            >
               <Button size="lg" className="w-full h-24 px-12 rounded-[2rem] text-[11px] font-black tracking-[0.4em] luxury-gradient border-none text-white shadow-[0_30px_70px_rgba(37,99,235,0.4)] hover:scale-105 hover:shadow-[0_40px_90px_rgba(37,99,235,0.6)] transition-all duration-500 active:scale-95 uppercase italic">
-                {status === "authenticated" ? "GO TO DASHBOARD" : "GET STARTED"}
+                {status === "unauthenticated" ? "GET STARTED" : session?.user?.role === "SELLER" ? "GO TO DASHBOARD" : "BECOME A SELLER"}
                 <Sparkles size={16} className="ml-4 group-hover:rotate-12 transition-transform" />
               </Button>
             </Link>

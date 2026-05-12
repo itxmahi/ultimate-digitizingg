@@ -65,9 +65,23 @@ export default function Home() {
                  ))}
               </div>
 
-              <Link href={status === "authenticated" ? "/seller/dashboard" : "/seller/register"} className="inline-block pt-8 group">
+              <Link 
+                href={
+                  status === "unauthenticated" 
+                    ? "/register" 
+                    : session?.user?.role === "SELLER" 
+                      ? "/seller/dashboard" 
+                      : "/seller/onboarding"
+                } 
+                className="inline-block pt-8 group"
+              >
                 <Button size="lg" className="h-16 px-12 rounded-2xl luxury-gradient border-none text-white font-black text-[10px] tracking-widest shadow-2xl hover:scale-105 transition-all duration-500 uppercase italic">
-                  {status === "authenticated" ? "MANAGE YOUR STUDIO" : "LAUNCH YOUR STUDIO NOW"} <ArrowRight size={16} className="ml-4 group-hover:translate-x-3 transition-transform" />
+                  {status === "unauthenticated" 
+                    ? "LAUNCH YOUR STUDIO NOW" 
+                    : session?.user?.role === "SELLER" 
+                      ? "MANAGE YOUR STUDIO" 
+                      : "START SELLING NOW"} 
+                  <ArrowRight size={16} className="ml-4 group-hover:translate-x-3 transition-transform" />
                 </Button>
               </Link>
             </div>
@@ -162,9 +176,22 @@ export default function Home() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-10">
-                  <Link href={status === "authenticated" ? "/seller/dashboard" : "/register"} className="w-full sm:w-auto group">
+                  <Link 
+                    href={
+                      status === "unauthenticated" 
+                        ? "/register" 
+                        : session?.user?.role === "SELLER" 
+                          ? "/seller/dashboard" 
+                          : "/seller/onboarding"
+                    } 
+                    className="w-full sm:w-auto group"
+                  >
                     <Button size="lg" className="w-full h-24 px-16 bg-white text-black hover:bg-white/90 rounded-[2.5rem] text-[12px] font-black shadow-2xl transition-all duration-500 uppercase italic tracking-[0.4em] group-hover:scale-105 active:scale-95">
-                      {status === "authenticated" ? "GO TO DASHBOARD" : "GET STARTED"}
+                      {status === "unauthenticated" 
+                        ? "GET STARTED" 
+                        : session?.user?.role === "SELLER" 
+                          ? "GO TO DASHBOARD" 
+                          : "BECOME A SELLER"}
                       <ArrowRight size={18} className="ml-4 group-hover:translate-x-3 transition-transform" />
                     </Button>
                   </Link>

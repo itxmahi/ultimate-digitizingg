@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, User, Menu, X, Search, Sparkles, Zap, ArrowRight, LogOut, LayoutDashboard, Settings } from "lucide-react";
+import { ShoppingCart, User, Menu, X, Search, Sparkles, Zap, ArrowRight, LogOut, LayoutDashboard, Settings, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession, signOut } from "next-auth/react";
 
@@ -28,7 +28,9 @@ const Navbar = () => {
     { name: "MARKETPLACE", href: "/marketplace", icon: <Sparkles size={16} className="mr-3" /> },
     { name: "FLASH SALE", href: "/#flash-sale", badge: "ELITE" },
     { name: "CUSTOM STITCH", href: "/custom-stitch" },
-    { name: "SELLER STUDIO", href: "/seller/dashboard" },
+    // Only show Seller Studio if role is SELLER
+    ...(session?.user?.role === "SELLER" ? [{ name: "SELLER STUDIO", href: "/seller/dashboard" }] : []),
+    ...(session?.user?.role === "BUYER" ? [{ name: "GET STARTED", href: "/seller/onboarding", badge: "NEW" }] : []),
   ];
 
   return (
@@ -204,10 +206,23 @@ const Navbar = () => {
                         </div>
                         
                         <div className="space-y-1">
-                          <Link href="/seller/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
-                            <LayoutDashboard size={16} className="text-muted-foreground/60 group-hover:text-primary" />
-                            <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">DASHBOARD</span>
-                          </Link>
+                          {session.user?.role === "SELLER" ? (
+                            <Link href="/seller/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
+                              <LayoutDashboard size={16} className="text-muted-foreground/60 group-hover:text-primary" />
+                              <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">SELLER STUDIO</span>
+                            </Link>
+                          ) : (
+                            <Link href="/seller/onboarding" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-primary/10 transition-colors group border border-primary/20">
+                              <Store size={16} className="text-primary" />
+                              <span className="text-[10px] font-black text-primary uppercase tracking-widest italic">BECOME A SELLER</span>
+                            </Link>
+                          )}
+                          {session.user?.role === "ADMIN" && (
+                            <Link href="/admin/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
+                              <ShieldCheck size={16} className="text-muted-foreground/60 group-hover:text-primary" />
+                              <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">ADMIN NEXUS</span>
+                            </Link>
+                          )}
                           <Link href="/settings" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
                             <Settings size={16} className="text-muted-foreground/60 group-hover:text-primary" />
                             <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">SETTINGS</span>
@@ -327,11 +342,19 @@ const Navbar = () => {
                           <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest truncate">{session.user?.email}</span>
                         </div>
                       </div>
-                      <Link href="/seller/dashboard" onClick={() => setIsOpen(false)}>
-                        <Button className="w-full h-20 rounded-[2rem] luxury-gradient border-none text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">
-                          DASHBOARD
-                        </Button>
-                      </Link>
+                      {session.user?.role === "SELLER" ? (
+                        <Link href="/seller/dashboard" onClick={() => setIsOpen(false)}>
+                          <Button className="w-full h-20 rounded-[2rem] luxury-gradient border-none text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">
+                            SELLER STUDIO
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link href="/seller/onboarding" onClick={() => setIsOpen(false)}>
+                          <Button className="w-full h-20 rounded-[2rem] bg-primary text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">
+                            BECOME A SELLER
+                          </Button>
+                        </Link>
+                      )}
                       <button 
                         onClick={() => {
                           signOut();

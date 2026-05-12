@@ -17,8 +17,12 @@ import {
   Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
+import { generateWhatsAppLink } from "@/lib/whatsapp";
+import Link from "next/link";
 
 const Marketplace = () => {
+  const { data: session } = useSession();
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -200,7 +204,7 @@ const Marketplace = () => {
                     {/* Hover Glow */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     
-                    <div className={`relative overflow-hidden bg-white/[0.02] ${viewType === 'list' ? 'w-64 h-64 rounded-[2.5rem] flex-shrink-0' : 'aspect-square'}`}>
+                    <Link href={`/marketplace/${product.id}`} className={`relative overflow-hidden bg-white/[0.02] ${viewType === 'list' ? 'w-64 h-64 rounded-[2.5rem] flex-shrink-0' : 'aspect-square'}`}>
                       <img src={product.images?.[0] || "https://images.unsplash.com/photo-1549490349-8643362247b5?w=500&auto=format&fit=crop&q=60"} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-3 transition-all duration-1000 grayscale group-hover:grayscale-0" />
                       <div className="absolute top-6 left-6 bg-primary text-white text-[9px] font-black px-4 py-1.5 rounded-full shadow-2xl z-10 uppercase tracking-[0.2em] flex items-center italic">
                         <Zap size={10} className="mr-2 animate-pulse" fill="currentColor" /> ELITE ASSET
@@ -208,7 +212,7 @@ const Marketplace = () => {
                       <button className="absolute top-6 right-6 w-12 h-12 glass border border-white/10 rounded-2xl text-white hover:bg-primary transition-all opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 flex items-center justify-center">
                         <Heart size={18} />
                       </button>
-                    </div>
+                    </Link>
 
                     <div className={`p-10 relative z-10 ${viewType === 'list' ? 'flex-1' : ''}`}>
                       <div className="flex justify-between items-start mb-6">
@@ -218,7 +222,9 @@ const Marketplace = () => {
                           <span className="ml-2 text-[10px] font-black">4.9</span>
                         </div>
                       </div>
-                      <h3 className="text-2xl font-black mb-2 tracking-tighter uppercase italic group-hover:text-primary transition-colors duration-500 line-clamp-1">{product.name}</h3>
+                      <Link href={`/marketplace/${product.id}`}>
+                        <h3 className="text-2xl font-black mb-2 tracking-tighter uppercase italic group-hover:text-primary transition-colors duration-500 line-clamp-1">{product.name}</h3>
+                      </Link>
                       <p className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-widest mb-8 italic">ENGINEERED BY <span className="text-muted-foreground/80 hover:text-primary cursor-pointer transition-colors">{product.seller?.name || "ULTIMATE"}</span></p>
                       
                       <div className="flex items-center justify-between">
@@ -232,10 +238,20 @@ const Marketplace = () => {
                               <span className="text-3xl font-black tracking-tighter italic text-primary">${Number(product.price).toFixed(2)}</span>
                             )}
                          </div>
-                         <Button className="h-14 px-8 rounded-2xl luxury-gradient border-none text-white shadow-2xl hover:scale-105 active:scale-95 transition-all">
-                           <ShoppingCart size={18} className="mr-3" />
-                           <span className="text-[10px] font-black uppercase tracking-widest">INGEST</span>
-                         </Button>
+                         <Link 
+                           href={generateWhatsAppLink(
+                             product.name, 
+                             product.flashSale?.isActive ? product.flashSale.discountPrice : product.price, 
+                             session?.user?.email || undefined,
+                             product.seller?.contactInfo
+                           )}
+                           target="_blank"
+                         >
+                           <Button className="h-14 px-8 rounded-2xl luxury-gradient border-none text-white shadow-2xl hover:scale-105 active:scale-95 transition-all">
+                             <Zap size={18} className="mr-3" />
+                             <span className="text-[10px] font-black uppercase tracking-widest">BUY NOW</span>
+                           </Button>
+                         </Link>
                       </div>
                     </div>
                   </motion.div>

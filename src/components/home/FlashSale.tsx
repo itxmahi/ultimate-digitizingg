@@ -5,8 +5,11 @@ import { motion } from "framer-motion";
 import { Timer, Zap, ShoppingCart, Heart, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { generateWhatsAppLink } from "@/lib/whatsapp";
 
 const FlashSale = () => {
+  const { data: session } = useSession();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState({
@@ -113,12 +116,14 @@ const FlashSale = () => {
                 className="group relative glass border border-white/5 rounded-[3rem] overflow-hidden transition-all duration-700 shadow-2xl hover:border-primary/40"
               >
                 <div className="relative aspect-[4/5] overflow-hidden m-2.5 rounded-[2.25rem]">
-                  <img 
-                    src={product.images[0] || "https://images.unsplash.com/photo-1549490349-8643362247b5?w=500"} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700" />
+                  <Link href={`/marketplace/${product.id}`}>
+                    <img 
+                      src={product.images[0] || "https://images.unsplash.com/photo-1549490349-8643362247b5?w=500"} 
+                      alt={product.name} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 
+                    />
+                  </Link>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700 pointer-events-none" />
                   
                   <div className="absolute top-5 left-5 luxury-gradient text-white text-[9px] font-black px-4 py-2 rounded-full shadow-2xl z-10 tracking-[0.2em] italic uppercase">
                     {discountPercent}% OFF
@@ -128,17 +133,27 @@ const FlashSale = () => {
                     <Heart size={18} className="group-hover:scale-110 transition-transform" />
                   </button>
 
-                  <div className="absolute bottom-6 left-6 right-6 z-20">
+                  <Link href={`/marketplace/${product.id}`} className="absolute bottom-16 left-6 right-6 z-20">
                       <p className="text-white font-black text-sm tracking-tight leading-none mb-2 uppercase italic line-clamp-1">{product.name}</p>
-                      <div className="flex items-center justify-between">
-                         <div className="flex items-center space-x-3">
-                            <span className="text-2xl font-black text-primary italic tracking-tighter">${Number(product.flashSale.discountPrice).toFixed(2)}</span>
-                            <span className="text-[10px] text-white/20 font-black line-through italic">${Number(product.price).toFixed(2)}</span>
-                         </div>
-                         <Button size="icon" className="w-10 h-10 rounded-xl luxury-gradient border-none shadow-2xl hover:scale-110 transition-transform">
-                            <ShoppingCart size={16} />
-                         </Button>
-                      </div>
+                  </Link>
+                  <div className="absolute bottom-6 left-6 right-6 z-20 flex items-center justify-between">
+                     <div className="flex items-center space-x-3">
+                        <span className="text-2xl font-black text-primary italic tracking-tighter">${Number(product.flashSale.discountPrice).toFixed(2)}</span>
+                        <span className="text-[10px] text-white/20 font-black line-through italic">${Number(product.price).toFixed(2)}</span>
+                     </div>
+                     <Link 
+                        href={generateWhatsAppLink(
+                          product.name, 
+                          product.flashSale?.discountPrice || product.price, 
+                          session?.user?.email || undefined,
+                          product.seller?.contactInfo
+                        )}
+                        target="_blank"
+                     >
+                       <Button size="icon" className="w-10 h-10 rounded-xl luxury-gradient border-none shadow-2xl hover:scale-110 transition-transform">
+                          <Zap size={16} />
+                       </Button>
+                     </Link>
                   </div>
                 </div>
 
