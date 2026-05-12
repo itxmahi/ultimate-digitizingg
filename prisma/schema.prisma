@@ -7,20 +7,19 @@ datasource db {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -34,17 +33,17 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  role          String    @default("BUYER")
-  accounts      Account[]
-  sessions      Session[]
-  seller        Seller?
-  orders        Order[]
+  id                   String                @id @default(cuid())
+  name                 String?
+  email                String?               @unique
+  emailVerified        DateTime?
+  image                String?
+  role                 String                @default("USER")
+  accounts             Account[]
   customStitchRequests CustomStitchRequest[]
+  orders               Order[]
+  seller               Seller?
+  sessions             Session[]
 }
 
 model VerificationToken {
@@ -56,63 +55,59 @@ model VerificationToken {
 }
 
 model Product {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
-  description        String?
-  price              Decimal
-  originalPrice      Decimal  @default(0)
-  discountedPrice    Decimal?
-  isFlashSale        Boolean  @default(false)
-  discountPercentage Int?
-  images             String[]
-  stitchCount        Int?
-  category           String
-  sellerId           String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  seller      Seller   @relation(fields: [sellerId], references: [id])
+  description String?
+  price       Decimal
+  images      String[]
+  category    String
+  flashSale   Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  sellerId    String
   orderItems  OrderItem[]
+  seller      Seller      @relation(fields: [sellerId], references: [id])
 }
 
 model Seller {
-  id               String   @id @default(cuid())
-  userId           String   @unique
+  id               String    @id @default(cuid())
+  userId           String    @unique
   storeName        String
   description      String?
   cnic             String
   businessCategory String
   address          String
   contactInfo      String
-  approved         Boolean  @default(false)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  user             User     @relation(fields: [userId], references: [id])
-  products         Product[]
+  approved         Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   orders           Order[]
+  products         Product[]
+  user             User      @relation(fields: [userId], references: [id])
 }
 
 model Order {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   userId      String
   sellerId    String
   totalAmount Decimal
-  status      String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, CANCELLED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id])
-  seller      Seller   @relation(fields: [sellerId], references: [id])
+  status      String      @default("PENDING")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  seller      Seller      @relation(fields: [sellerId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
   items       OrderItem[]
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   orderId   String
   productId String
   quantity  Int
   price     Decimal
   createdAt DateTime @default(now())
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
 }
 
 model CustomStitchRequest {

@@ -142,6 +142,25 @@
     @apply bg-gradient-to-br from-primary via-blue-600 to-blue-800;
   }
 
+  .premium-gradient {
+    @apply bg-gradient-to-br from-[#FFD700] via-[#FDB931] to-[#9E7E1D];
+  }
+
+  .brand-glow {
+    @apply shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_35px_rgba(37,99,235,0.5)];
+  }
+
+  .premium-glow {
+    @apply shadow-[0_0_20px_rgba(253,185,49,0.3)] hover:shadow-[0_0_35px_rgba(253,185,49,0.5)];
+  }
+
+  .buy-now-premium {
+    @apply bg-gradient-to-br from-[#FFD700] via-[#FDB931] to-[#9E7E1D] text-black font-black uppercase tracking-[0.2em] italic 
+           shadow-[0_10px_30px_rgba(253,185,49,0.2)] hover:shadow-[0_15px_40px_rgba(253,185,49,0.4)]
+           hover:scale-[1.02] active:scale-[0.98] transition-all duration-500
+           flex items-center justify-center border-none;
+  }
+
   .animate-spin-slow {
     animation: spin 8s linear infinite;
   }

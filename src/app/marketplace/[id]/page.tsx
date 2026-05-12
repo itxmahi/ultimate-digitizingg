@@ -88,15 +88,15 @@ const ProductDetails = () => {
             <div className="relative aspect-square rounded-[4rem] overflow-hidden bg-white/[0.02] border border-white/5 group shadow-2xl">
               <AnimatePresence mode="wait">
                 {!isSimulating ? (
-                  <motion.img
-                    key={selectedImage}
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    src={product.images[selectedImage] || "https://images.unsplash.com/photo-1549490349-8643362247b5?w=800"}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
-                  />
+                    <motion.img
+                      key={selectedImage}
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      src={product.images[selectedImage]?.startsWith('http') ? product.images[selectedImage] : `/images/${product.images[selectedImage] || 'placeholder.jpg'}`}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                    />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-[#020617] relative">
                     <div className="relative w-64 h-64 border-2 border-primary/20 rounded-full flex items-center justify-center overflow-hidden">
@@ -180,15 +180,15 @@ const ProductDetails = () => {
                <div className="flex flex-col">
                   <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mb-2 italic">Valuation</span>
                   <div className="flex items-baseline space-x-4">
-                    <span className="text-6xl font-black italic tracking-tighter text-white">${Number(currentPrice).toFixed(2)}</span>
-                    {product.flashSale?.isActive && (
-                      <span className="text-xl text-muted-foreground/30 line-through font-black italic">${Number(product.price).toFixed(2)}</span>
+                    <span className="text-6xl font-black italic tracking-tighter text-white">${Number(product.isFlashSale ? product.discountedPrice : product.price).toFixed(2)}</span>
+                    {product.isFlashSale && (
+                      <span className="text-xl text-muted-foreground/30 line-through font-black italic">${Number(product.originalPrice).toFixed(2)}</span>
                     )}
                   </div>
                </div>
-               {product.flashSale?.isActive && (
+               {product.isFlashSale && (
                  <div className="ml-auto bg-primary text-white text-[10px] font-black px-5 py-2.5 rounded-full shadow-2xl italic uppercase tracking-widest">
-                    -{Math.round((1 - (Number(product.flashSale.discountPrice) / Number(product.price))) * 100)}% OFF
+                    -{product.discountPercentage}% OFF
                  </div>
                )}
             </div>
@@ -208,7 +208,9 @@ const ProductDetails = () => {
                <Link 
                  href={generateWhatsAppLink(
                    product.name, 
-                   currentPrice.toString(), 
+                   product.originalPrice,
+                   product.discountPercentage,
+                   product.isFlashSale ? product.discountedPrice : product.price,
                    session?.user?.email || undefined,
                    product.seller?.contactInfo
                  )}

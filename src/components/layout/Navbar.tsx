@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, User, Menu, X, Search, Sparkles, Zap, ArrowRight, LogOut, LayoutDashboard, Settings, Store } from "lucide-react";
+import { ShoppingCart, User, Menu, X, Search, Sparkles, Zap, ArrowRight, LogOut, LayoutDashboard, Settings, Store, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession, signOut } from "next-auth/react";
 
@@ -26,7 +26,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "MARKETPLACE", href: "/marketplace", icon: <Sparkles size={16} className="mr-3" /> },
-    { name: "FLASH SALE", href: "/#flash-sale", badge: "ELITE" },
+    { name: "FLASH SALE", href: "/flash-sale", badge: "ELITE" },
     { name: "CUSTOM STITCH", href: "/custom-stitch" },
     // Only show Seller Studio if role is SELLER
     ...(session?.user?.role === "SELLER" ? [{ name: "SELLER STUDIO", href: "/seller/dashboard" }] : []),
@@ -43,10 +43,10 @@ const Navbar = () => {
             animate={{ y: 0, opacity: 1 }}
             className="flex items-center space-x-6 text-white text-[10px] font-black uppercase tracking-[0.4em] italic"
           >
-            <span className="flex items-center"><Zap size={14} className="mr-3 animate-pulse text-yellow-400" fill="currentColor" /> SYSTEM UPDATE: 60% OFF ALL ELITE ASSETS</span>
+            <span className="flex items-center"><Zap size={14} className="mr-3 animate-pulse text-yellow-400" fill="currentColor" /> EXCLUSIVE OFFER: 60% OFF ALL PREMIUM DESIGNS</span>
             <span className="hidden md:inline text-white/30 font-light">|</span>
-            <Link href="/#flash-sale" className="hidden md:flex items-center hover:text-white/80 group transition-all">
-              INITIALIZE PROTOCOL <ArrowRight size={14} className="ml-3 group-hover:translate-x-2 transition-transform" />
+            <Link href="/flash-sale" className="hidden md:flex items-center hover:text-white/80 group transition-all">
+              VIEW OFFERS <ArrowRight size={14} className="ml-3 group-hover:translate-x-2 transition-transform" />
             </Link>
           </motion.div>
           <button 
@@ -201,7 +201,7 @@ const Navbar = () => {
                         className="absolute right-0 mt-4 w-72 glass border-white/10 rounded-[2rem] p-4 shadow-[0_40px_80px_rgba(0,0,0,0.8)] backdrop-blur-3xl z-[100]"
                       >
                         <div className="p-4 border-b border-white/5 mb-2">
-                           <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1 italic">AUTHORIZED SESSION</p>
+                           <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1 italic">ACCOUNT PROFILE</p>
                            <p className="text-[12px] font-black text-white truncate uppercase italic">{session.user?.email}</p>
                         </div>
                         
@@ -209,7 +209,7 @@ const Navbar = () => {
                           {session.user?.role === "SELLER" ? (
                             <Link href="/seller/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
                               <LayoutDashboard size={16} className="text-muted-foreground/60 group-hover:text-primary" />
-                              <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">SELLER STUDIO</span>
+                               <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">SELLER DASHBOARD</span>
                             </Link>
                           ) : (
                             <Link href="/seller/onboarding" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-primary/10 transition-colors group border border-primary/20">
@@ -220,7 +220,7 @@ const Navbar = () => {
                           {session.user?.role === "ADMIN" && (
                             <Link href="/admin/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
                               <ShieldCheck size={16} className="text-muted-foreground/60 group-hover:text-primary" />
-                              <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">ADMIN NEXUS</span>
+                               <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">ADMIN PANEL</span>
                             </Link>
                           )}
                           <Link href="/settings" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
@@ -232,7 +232,7 @@ const Navbar = () => {
                             className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-red-500/10 transition-colors group"
                           >
                             <LogOut size={16} className="text-muted-foreground/60 group-hover:text-red-500" />
-                            <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-red-500 uppercase tracking-widest italic">TERMINATE SESSION</span>
+                             <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-red-500 uppercase tracking-widest italic">LOG OUT</span>
                           </button>
                         </div>
                       </motion.div>
@@ -295,7 +295,7 @@ const Navbar = () => {
                 <div className="flex justify-between items-center mb-16 relative z-10">
                   <div className="flex flex-col">
                     <span className="text-3xl font-black tracking-tighter text-gradient leading-none uppercase italic">ULTIMATE.</span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 mt-2">ACCESS HUB</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 mt-2">USER ACCOUNT</span>
                   </div>
                   <button onClick={() => setIsOpen(false)} className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 text-muted-foreground hover:text-white transition-all shadow-2xl"><X size={22} /></button>
                 </div>

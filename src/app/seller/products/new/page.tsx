@@ -24,6 +24,7 @@ const AddProductPage = () => {
     isFlashSale: false,
     discountPercentage: "",
     stitchCount: "",
+    imageName: "Box1.jpg", // Default to one of the pasted images
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -93,7 +94,7 @@ const AddProductPage = () => {
           isFlashSale: formData.isFlashSale,
           discountPercentage: formData.isFlashSale ? parseInt(formData.discountPercentage) : null,
           stitchCount: formData.stitchCount ? parseInt(formData.stitchCount) : null,
-          images: imageUrls,
+          images: [formData.imageName],
           // We'll need a way to get the sellerId. For now, let's assume the API handles it from session
           // or we pass it if we have it.
         }),

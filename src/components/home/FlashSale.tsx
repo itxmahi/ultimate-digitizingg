@@ -24,7 +24,7 @@ const FlashSale = () => {
         const response = await fetch("/api/products");
         const data = await response.json();
         // Filter products that have an active flash sale
-        const flashSales = data.filter((p: any) => p.flashSale && p.flashSale.isActive);
+        const flashSales = data.filter((p: any) => p.isFlashSale);
         setProducts(flashSales.slice(0, 4));
       } catch (error) {
         console.error("Failed to fetch flash sales:", error);
@@ -53,7 +53,7 @@ const FlashSale = () => {
     return (
       <div className="py-32 flex flex-col items-center justify-center space-y-6">
         <Loader2 size={40} className="animate-spin text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 italic">Syncing Flash Stream...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 italic">Updating Collection...</p>
       </div>
     );
   }
@@ -76,11 +76,11 @@ const FlashSale = () => {
               className="flex items-center space-x-3 text-primary"
             >
                <Zap size={20} className="animate-pulse" fill="currentColor" />
-               <span className="text-[10px] font-black uppercase tracking-[0.4em] italic">Elite Time-Locked Offer</span>
+               <span className="text-[10px] font-black uppercase tracking-[0.4em] italic">Exclusive Limited Offers</span>
             </motion.div>
-            <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.8] uppercase">FLASH <br /><span className="text-gradient italic">SALE.</span></h2>
+            <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.8] uppercase">FLASH <br /><span className="text-gradient italic">OFFERS.</span></h2>
             <p className="text-muted-foreground/60 text-lg md:text-xl max-w-xl font-medium leading-relaxed italic">
-              Unlocking premium digital assets and elite digitizing services at unprecedented factory prices for a very limited duration.
+              Access high-quality digitizing assets and professional embroidery services at exclusive rates for a limited duration.
             </p>
           </div>
 
@@ -105,7 +105,7 @@ const FlashSale = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {products.map((product, idx) => {
-            const discountPercent = Math.round((1 - (Number(product.flashSale.discountPrice) / Number(product.price))) * 100);
+            const discountPercent = product.discountPercentage || 0;
             return (
               <motion.div
                 key={product.id}
@@ -118,16 +118,13 @@ const FlashSale = () => {
                 <div className="relative aspect-[4/5] overflow-hidden m-2.5 rounded-[2.25rem]">
                   <Link href={`/marketplace/${product.id}`}>
                     <img 
-                      src={product.images[0] || "https://images.unsplash.com/photo-1549490349-8643362247b5?w=500"} 
+                      src={product.images?.[0]?.startsWith('http') ? product.images[0] : `/images/${product.images?.[0] || 'placeholder.jpg'}`} 
                       alt={product.name} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 
                     />
                   </Link>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700 pointer-events-none" />
                   
-                  <div className="absolute top-5 left-5 luxury-gradient text-white text-[9px] font-black px-4 py-2 rounded-full shadow-2xl z-10 tracking-[0.2em] italic uppercase">
-                    {discountPercent}% OFF
-                  </div>
                   
                   <button className="absolute top-5 right-5 w-12 h-12 glass border border-white/10 rounded-2xl text-white flex items-center justify-center hover:bg-primary transition-all duration-500 z-10">
                     <Heart size={18} className="group-hover:scale-110 transition-transform" />
@@ -136,32 +133,41 @@ const FlashSale = () => {
                   <Link href={`/marketplace/${product.id}`} className="absolute bottom-16 left-6 right-6 z-20">
                       <p className="text-white font-black text-sm tracking-tight leading-none mb-2 uppercase italic line-clamp-1">{product.name}</p>
                   </Link>
-                  <div className="absolute bottom-6 left-6 right-6 z-20 flex items-center justify-between">
-                     <div className="flex items-center space-x-3">
-                        <span className="text-2xl font-black text-primary italic tracking-tighter">${Number(product.flashSale.discountPrice).toFixed(2)}</span>
-                        <span className="text-[10px] text-white/20 font-black line-through italic">${Number(product.price).toFixed(2)}</span>
-                     </div>
-                     <Link 
+                   <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col space-y-4">
+                      <div className="flex items-center justify-between">
+                         <div className="flex items-center space-x-3">
+                            <span className="text-2xl font-black text-primary italic tracking-tighter">${Number(product.discountedPrice).toFixed(2)}</span>
+                            <span className="text-[10px] text-white/20 font-black line-through italic">${Number(product.originalPrice).toFixed(2)}</span>
+                         </div>
+                         <div className="text-[10px] font-black text-white/40 italic uppercase tracking-widest">
+                           {discountPercent}% OFF
+                         </div>
+                      </div>
+                      <Link 
                         href={generateWhatsAppLink(
                           product.name, 
-                          product.flashSale?.discountPrice || product.price, 
+                          product.originalPrice,
+                          product.discountPercentage,
+                          product.discountedPrice,
                           session?.user?.email || undefined,
                           product.seller?.contactInfo
                         )}
                         target="_blank"
-                     >
-                       <Button size="icon" className="w-10 h-10 rounded-xl luxury-gradient border-none shadow-2xl hover:scale-110 transition-transform">
-                          <Zap size={16} />
-                       </Button>
-                     </Link>
-                  </div>
+                        className="w-full"
+                      >
+                        <Button className="w-full h-12 rounded-2xl buy-now-premium text-[9px] group/btn">
+                           <Zap size={14} className="mr-2 group-hover/btn:rotate-12 transition-transform" />
+                           ORDER NOW • PREMIUM
+                        </Button>
+                      </Link>
+                   </div>
                 </div>
 
                 <div className="px-8 pb-8 pt-2">
                   <div className="space-y-3">
                      <div className="flex justify-between text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.3em] italic">
-                        <span>LOCKED OFFER</span>
-                        <span className="text-primary">SYNCED</span>
+                        <span>AVAILABILITY</span>
+                        <span className="text-primary">IN STOCK</span>
                      </div>
                      <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
                         <motion.div 
