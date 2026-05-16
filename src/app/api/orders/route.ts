@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         userId,
         sellerId: product.sellerId,
         totalAmount,
-        orderItems: {
+        items: {
           create: {
             productId,
             price: totalAmount,

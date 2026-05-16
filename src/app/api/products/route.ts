@@ -9,7 +9,6 @@ export async function GET() {
     const products = await prisma.product.findMany({
       include: {
         seller: true,
-        flashSale: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -56,14 +55,15 @@ export async function POST(req: Request) {
         name,
         description,
         price,
-        originalPrice: originalPrice || price,
-        discountedPrice: discountedPrice || price,
-        isFlashSale: isFlashSale || false,
-        discountPercentage: discountPercentage || null,
         category,
         sellerId: seller.id,
         images,
-        stitchCount: stitchCount ? parseInt(stitchCount) : null,
+        flashSale: isFlashSale ? {
+          isFlashSale: true,
+          originalPrice: originalPrice || price,
+          discountedPrice: discountedPrice || price,
+          discountPercentage: discountPercentage || null,
+        } : undefined,
       },
     });
 
