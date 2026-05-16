@@ -50,9 +50,9 @@ export async function GET() {
       product.orderItems.forEach(item => {
         const dateStr = item.order.createdAt.toISOString().split('T')[0];
         if (dailyData[dateStr] !== undefined) {
-          dailyData[dateStr] += item.price;
+          dailyData[dateStr] += Number(item.price);
         }
-        totalRevenue += item.price;
+        totalRevenue += Number(item.price);
         totalSales++;
       });
     });
