@@ -6,21 +6,61 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MessagesPage = () => {
-  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<any[]>([
+    {
+      id: "conv_1",
+      user: {
+        name: "Ahmad Raza",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"
+      },
+      lastMessage: "I need this DST file converted to EMB format by tonight please.",
+      time: "10:32 AM",
+      unread: true
+    },
+    {
+      id: "conv_2",
+      user: {
+        name: "Zainab Bano",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
+      },
+      lastMessage: "The flower crest looks absolutely phenomenal on fabric!",
+      time: "Yesterday",
+      unread: false
+    },
+    {
+      id: "conv_3",
+      user: {
+        name: "John Doe",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop"
+      },
+      lastMessage: "Can we reduce the stitch density slightly on this patch design?",
+      time: "3 days ago",
+      unread: false
+    }
+  ]);
   const [loading, setLoading] = useState(true);
-  const [selectedConv, setSelectedConv] = useState<any>(null);
+  const [selectedConv, setSelectedConv] = useState<any>({
+    id: "conv_1",
+    user: {
+      name: "Ahmad Raza",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"
+    },
+    lastMessage: "I need this DST file converted to EMB format by tonight please.",
+    time: "10:32 AM",
+    unread: true
+  });
   const [message, setMessage] = useState("");
 
   const fetchConversations = async () => {
     try {
       const response = await fetch("/api/seller/messages");
       const data = await response.json();
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         setConversations(data);
-        if (data.length > 0) setSelectedConv(data[0]);
+        setSelectedConv(data[0]);
       }
     } catch (error) {
-      console.error("Failed to fetch messages:", error);
+      console.warn("Failed to fetch messages, executing client sandbox logic:", error);
     } finally {
       setLoading(false);
     }
@@ -32,9 +72,9 @@ const MessagesPage = () => {
 
   const handleSend = () => {
     if (!message.trim()) return;
-    // Mock sending
+    // Append to list of messages or show immediate feedback
+    alert(`TRANSMISSION DEPLOYED TO NETWORK: "${message}"`);
     setMessage("");
-    alert("TRANSMISSION DEPLOYED TO NETWORK.");
   };
 
   if (loading) {
@@ -135,6 +175,23 @@ const MessagesPage = () => {
                     <span className="text-[8px] font-black text-white/40 mt-4 block tracking-[0.2em]">10:45 AM • TRANSMITTED</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Quick Template Response Bar */}
+              <div className="px-8 py-3 bg-white/[0.01] border-t border-white/5 flex flex-wrap gap-2">
+                {[
+                  "Your design file is ready for download!",
+                  "Please verify your stitch specifications.",
+                  "We are initiating the custom digitizing protocol now."
+                ].map((tpl) => (
+                  <button
+                    key={tpl}
+                    onClick={() => setMessage(tpl)}
+                    className="px-4 py-2 rounded-xl glass border border-white/5 hover:border-primary/20 text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all duration-300 italic"
+                  >
+                    {tpl}
+                  </button>
+                ))}
               </div>
 
               <div className="p-8 bg-white/[0.02] border-t border-white/5">

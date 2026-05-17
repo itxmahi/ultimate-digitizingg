@@ -18,14 +18,19 @@ const FlashSale = () => {
     seconds: 59,
   });
 
+  const productIsFlash = (p: any) => {
+    return p && p.flashSale && typeof p.flashSale === "object" && (p.flashSale as any).isFlashSale;
+  };
+
   useEffect(() => {
     const fetchFlashSales = async () => {
       try {
         const response = await fetch("/api/products");
         const data = await response.json();
-        // Filter products that have an active flash sale
-        const flashSales = data.filter((p: any) => p.isFlashSale);
-        setProducts(flashSales.slice(0, 4));
+        if (Array.isArray(data)) {
+          const flashSales = data.filter((p: any) => productIsFlash(p));
+          setProducts(flashSales.slice(0, 4));
+        }
       } catch (error) {
         console.error("Failed to fetch flash sales:", error);
       } finally {
@@ -58,12 +63,10 @@ const FlashSale = () => {
     );
   }
 
-  // If no flash sales, don't show the section or show a message
   if (products.length === 0) return null;
 
   return (
     <section id="flash-sale" className="py-32 relative overflow-hidden bg-background">
-      {/* Premium Dynamic Background */}
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
       
@@ -105,7 +108,11 @@ const FlashSale = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {products.map((product, idx) => {
-            const discountPercent = product.discountPercentage || 0;
+            const isFS = productIsFlash(product);
+            const discountPercent = isFS ? product.flashSale.discountPercentage : 0;
+            const discountedPrice = isFS ? product.flashSale.discountedPrice : product.price;
+            const originalPrice = isFS ? product.flashSale.originalPrice : product.price;
+
             return (
               <motion.div
                 key={product.id}
@@ -125,7 +132,6 @@ const FlashSale = () => {
                   </Link>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700 pointer-events-none" />
                   
-                  
                   <button className="absolute top-5 right-5 w-12 h-12 glass border border-white/10 rounded-2xl text-white flex items-center justify-center hover:bg-primary transition-all duration-500 z-10">
                     <Heart size={18} className="group-hover:scale-110 transition-transform" />
                   </button>
@@ -136,8 +142,8 @@ const FlashSale = () => {
                    <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col space-y-4">
                       <div className="flex items-center justify-between">
                          <div className="flex items-center space-x-3">
-                            <span className="text-2xl font-black text-primary italic tracking-tighter">${Number(product.discountedPrice).toFixed(2)}</span>
-                            <span className="text-[10px] text-white/20 font-black line-through italic">${Number(product.originalPrice).toFixed(2)}</span>
+                            <span className="text-2xl font-black text-primary italic tracking-tighter">${Number(discountedPrice).toFixed(2)}</span>
+                            <span className="text-[10px] text-white/20 font-black line-through italic">${Number(originalPrice).toFixed(2)}</span>
                          </div>
                          <div className="text-[10px] font-black text-white/40 italic uppercase tracking-widest">
                            {discountPercent}% OFF
@@ -146,9 +152,9 @@ const FlashSale = () => {
                       <Link 
                         href={generateWhatsAppLink(
                           product.name, 
-                          product.originalPrice,
-                          product.discountPercentage,
-                          product.discountedPrice,
+                          originalPrice,
+                          discountPercent,
+                          discountedPrice,
                           session?.user?.email || undefined,
                           product.seller?.contactInfo
                         )}
@@ -167,7 +173,7 @@ const FlashSale = () => {
                   <div className="space-y-3">
                      <div className="flex justify-between text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.3em] italic">
                         <span>AVAILABILITY</span>
-                        <span className="text-primary">IN STOCK</span>
+                        <span className="text-primary">{product.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}</span>
                      </div>
                      <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
                         <motion.div 

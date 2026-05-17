@@ -67,11 +67,41 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { 
+      name, 
+      description, 
+      price, 
+      category, 
+      images, 
+      stock, 
+      active, 
+      isFlashSale, 
+      discountPercentage,
+      originalPrice,
+      discountedPrice
+    } = body;
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (price !== undefined) updateData.price = parseFloat(price);
+    if (category !== undefined) updateData.category = category;
+    if (images !== undefined) updateData.images = images;
+    if (stock !== undefined) updateData.stock = parseInt(stock);
+    if (active !== undefined) updateData.active = Boolean(active);
+    
+    if (isFlashSale !== undefined) {
+      updateData.flashSale = isFlashSale ? {
+        isFlashSale: true,
+        originalPrice: originalPrice || price || Number(product.price),
+        discountedPrice: discountedPrice || price || Number(product.price),
+        discountPercentage: discountPercentage || null,
+      } : null;
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id },
-      data: {
-        ...body,
-      }
+      data: updateData
     });
 
     return NextResponse.json(updatedProduct);

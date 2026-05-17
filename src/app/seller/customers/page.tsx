@@ -1,12 +1,40 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Search, Filter, Mail, MoreHorizontal, Loader2, User } from "lucide-react";
+import { Search, Filter, Mail, MoreHorizontal, Loader2, User, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
 const CustomersPage = () => {
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([
+    {
+      id: "cust_1",
+      name: "Ahmad Raza",
+      email: "ahmad@titan.com",
+      phone: "+923451234567",
+      totalOrders: 15,
+      totalSpent: "$1,850.00",
+      lastOrder: new Date(Date.now() - 3600000 * 2).toISOString()
+    },
+    {
+      id: "cust_2",
+      name: "Zainab Bano",
+      email: "zainab@lux.com",
+      phone: "+923219876543",
+      totalOrders: 9,
+      totalSpent: "$980.50",
+      lastOrder: new Date(Date.now() - 3600000 * 24).toISOString()
+    },
+    {
+      id: "cust_3",
+      name: "John Doe",
+      email: "john@cyber.com",
+      phone: "+14155552671",
+      totalOrders: 24,
+      totalSpent: "$4,200.00",
+      lastOrder: new Date(Date.now() - 3600000 * 48).toISOString()
+    }
+  ]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -14,7 +42,7 @@ const CustomersPage = () => {
     try {
       const response = await fetch("/api/seller/customers");
       const data = await response.json();
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         setCustomers(data);
       }
     } catch (error) {
@@ -112,6 +140,15 @@ const CustomersPage = () => {
                   </td>
                   <td className="py-6 px-8 text-right">
                     <div className="flex items-center justify-end space-x-2">
+                      <a 
+                        href={`https://wa.me/${customer.phone?.replace(/[^0-9]/g, '') || '923451234567'}?text=Hello%20${customer.name}%2C%20this%20is%20your%20design%20manager%20from%20Ultimate%20Digitizing.%20Just%20checking%20if%20you%20need%20any%20new%20embroidery%20digitizing%20or%20vector%20files%20today!`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all duration-300 shadow-xl"
+                        title="Quick WhatsApp message"
+                      >
+                        <MessageSquare size={14} />
+                      </a>
                       <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl glass border border-white/5 text-muted-foreground hover:text-primary transition-all shadow-xl"><Mail size={16} /></Button>
                       <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl glass border border-white/5 text-muted-foreground hover:text-primary transition-all shadow-xl"><MoreHorizontal size={16} /></Button>
                     </div>

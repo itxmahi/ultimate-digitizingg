@@ -13,16 +13,18 @@ const AddProductPage = () => {
   const { data: session } = useSession();
   const [dragActive, setDragActive] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: "",
-    discountPrice: "",
+    price: "", // Original Price
+    salePrice: "", // Sale Price
+    stock: "10",
     category: "SELECT SECTOR",
+    customCategory: "",
     tags: "",
     isFlashSale: false,
-    discountPercentage: "",
     stitchCount: "",
     imageName: "Box1.jpg", // Default to one of the pasted images
   });
@@ -48,7 +50,11 @@ const AddProductPage = () => {
 
   const handleFiles = (files: FileList | null) => {
     if (files) {
-      setSelectedImages(prev => [...prev, ...Array.from(files)]);
+      const fileArr = Array.from(files);
+      setSelectedImages(prev => [...prev, ...fileArr]);
+      
+      const newPreviews = fileArr.map(file => URL.createObjectURL(file));
+      setPreviews(prev => [...prev, ...newPreviews]);
     }
   };
 
@@ -68,7 +74,9 @@ const AddProductPage = () => {
   };
 
   const removeImage = (index: number) => {
+    URL.revokeObjectURL(previews[index]);
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handlePublish = async () => {
@@ -77,26 +85,35 @@ const AddProductPage = () => {
       return;
     }
 
+    if (formData.category === "OTHER" && !formData.customCategory) {
+      alert("Please specify your custom category.");
+      return;
+    }
+
     setIsPublishing(true);
     try {
+      const originalPriceVal = parseFloat(formData.price);
+      const salePriceVal = formData.isFlashSale && formData.salePrice ? parseFloat(formData.salePrice) : originalPriceVal;
+      const discountPercent = formData.isFlashSale ? Math.round((1 - salePriceVal / originalPriceVal) * 100) : null;
+
       // In a real app, you'd upload images to Cloudinary/S3 first
-      // For now, we'll mock the image URLs
-      const imageUrls = selectedImages.map(() => `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=800`);
+      const imageFiles = selectedImages.length > 0 ? selectedImages.map(f => `/images/${f.name}`) : [`/images/${formData.imageName}`];
 
       const response = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          originalPrice: parseFloat(formData.price),
-          discountedPrice: formData.isFlashSale && formData.discountPercentage ? parseFloat(formData.price) * (1 - parseInt(formData.discountPercentage) / 100) : parseFloat(formData.price),
+          name: formData.name,
+          description: formData.description,
+          price: salePriceVal,
+          stock: parseInt(formData.stock) || 10,
+          category: formData.category === "OTHER" ? formData.customCategory : formData.category,
           isFlashSale: formData.isFlashSale,
-          discountPercentage: formData.isFlashSale ? parseInt(formData.discountPercentage) : null,
+          discountPercentage: discountPercent,
+          originalPrice: originalPriceVal,
+          discountedPrice: salePriceVal,
           stitchCount: formData.stitchCount ? parseInt(formData.stitchCount) : null,
-          images: [formData.imageName],
-          // We'll need a way to get the sellerId. For now, let's assume the API handles it from session
-          // or we pass it if we have it.
+          images: imageFiles,
         }),
       });
 
@@ -220,10 +237,10 @@ const AddProductPage = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-10">
-              {selectedImages.map((file, index) => (
+              {previews.map((previewUrl, index) => (
                 <div key={index} className="aspect-square glass rounded-3xl border border-white/10 relative overflow-hidden group shadow-2xl">
                   <img 
-                    src={URL.createObjectURL(file)} 
+                    src={previewUrl} 
                     alt="preview" 
                     className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
                   />
@@ -256,7 +273,7 @@ const AddProductPage = () => {
             </div>
             
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">VALUATION (USD)</label>
+              <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">ORIGINAL PRICE (USD)</label>
               <div className="relative group">
                 <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-primary">$</span>
                 <input 
@@ -289,21 +306,21 @@ const AddProductPage = () => {
 
             {formData.isFlashSale && (
               <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">DISCOUNT PERCENTAGE (%)</label>
+                <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">SALE PRICE (USD)</label>
                 <div className="relative group">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-chart-4">%</span>
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-chart-4">$</span>
                   <input 
-                    name="discountPercentage"
-                    value={formData.discountPercentage}
+                    name="salePrice"
+                    value={formData.salePrice}
                     onChange={handleInputChange}
                     type="number" 
-                    placeholder="20" 
+                    placeholder="0.00" 
                     className="w-full bg-white/[0.03] border border-white/5 rounded-[1.5rem] pl-12 pr-8 py-6 text-xl font-black tracking-tighter focus:ring-4 ring-chart-4/10 transition-all outline-none shadow-inner italic"
                   />
                 </div>
-                {formData.price && formData.discountPercentage && (
+                {formData.price && formData.salePrice && (
                   <p className="text-[10px] font-black text-chart-4 uppercase tracking-widest italic ml-2">
-                    Final Price: ${(parseFloat(formData.price) * (1 - parseInt(formData.discountPercentage) / 100)).toFixed(2)}
+                    Badge: {Math.round((1 - parseFloat(formData.salePrice) / parseFloat(formData.price)) * 100)}% OFF
                   </p>
                 )}
               </div>
@@ -313,7 +330,7 @@ const AddProductPage = () => {
           <div className="glass p-12 rounded-[3.5rem] border border-white/5 space-y-10">
             <div className="flex items-center space-x-4 mb-4">
                <div className="w-2 h-8 bg-purple-500 rounded-full" />
-               <h2 className="text-2xl font-black tracking-tight uppercase italic">HIERARCHY</h2>
+               <h2 className="text-2xl font-black tracking-tight uppercase italic">HIERARCHY & INVENTORY</h2>
             </div>
             
             <div className="space-y-4">
@@ -329,6 +346,18 @@ const AddProductPage = () => {
             </div>
 
             <div className="space-y-4">
+              <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">STOCK QUANTITY</label>
+              <input 
+                name="stock"
+                value={formData.stock}
+                onChange={handleInputChange}
+                type="number" 
+                placeholder="10" 
+                className="w-full bg-white/[0.03] border border-white/5 rounded-[1.5rem] px-8 py-6 text-sm font-black uppercase tracking-widest focus:ring-4 ring-primary/10 transition-all outline-none shadow-inner placeholder:text-muted-foreground/20"
+              />
+            </div>
+
+            <div className="space-y-4">
               <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">ASSET CATEGORY</label>
               <div className="relative group">
                 <select 
@@ -337,17 +366,33 @@ const AddProductPage = () => {
                   onChange={handleInputChange}
                   className="w-full bg-white/[0.03] border border-white/5 rounded-[1.5rem] px-8 py-6 text-[11px] font-black uppercase tracking-widest focus:ring-4 ring-primary/10 transition-all outline-none appearance-none shadow-inner italic"
                 >
-                  <option className="bg-[#0F172A]">SELECT SECTOR</option>
-                  <option className="bg-[#0F172A]">ANIMALS / WILDLIFE</option>
-                  <option className="bg-[#0F172A]">FLORAL / BOTANICAL</option>
-                  <option className="bg-[#0F172A]">LOGOS / CORPORATE</option>
-                  <option className="bg-[#0F172A]">TYPOGRAPHY / ALPHA</option>
+                  <option className="bg-[#0F172A]" value="SELECT SECTOR">SELECT SECTOR</option>
+                  <option className="bg-[#0F172A]" value="ANIMALS / WILDLIFE">ANIMALS / WILDLIFE</option>
+                  <option className="bg-[#0F172A]" value="FLORAL / BOTANICAL">FLORAL / BOTANICAL</option>
+                  <option className="bg-[#0F172A]" value="LOGOS / CORPORATE">LOGOS / CORPORATE</option>
+                  <option className="bg-[#0F172A]" value="TYPOGRAPHY / ALPHA">TYPOGRAPHY / ALPHA</option>
+                  <option className="bg-[#0F172A]" value="GEOMETRIC / ABSTRACT">GEOMETRIC / ABSTRACT</option>
+                  <option className="bg-[#0F172A]" value="OTHER">OTHER (WRITE CUSTOM)</option>
                 </select>
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/40">
                    <ChevronDown size={20} />
                 </div>
               </div>
             </div>
+
+            {formData.category === "OTHER" && (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">CUSTOM CATEGORY NAME</label>
+                <input 
+                  name="customCategory"
+                  value={formData.customCategory}
+                  onChange={handleInputChange}
+                  type="text" 
+                  placeholder="E.G. CUSTOM STITCH / PATCHES" 
+                  className="w-full bg-white/[0.03] border border-white/5 rounded-[1.5rem] px-8 py-6 text-sm font-black uppercase tracking-widest focus:ring-4 ring-primary/10 transition-all outline-none shadow-inner placeholder:text-muted-foreground/20"
+                />
+              </div>
+            )}
 
             <div className="space-y-4">
               <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic ml-2">METADATA TAGS</label>

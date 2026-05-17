@@ -38,7 +38,7 @@ export async function GET() {
 
     seller.products.forEach(product => {
       product.orderItems.forEach(item => {
-        netVolume += item.price;
+        netVolume += Number(item.price);
         if (item.order.status === "PENDING" || item.order.status === "PROCESSING") {
           activeOrders++;
         }
@@ -49,7 +49,7 @@ export async function GET() {
           id: item.order.id.slice(-4),
           customer: item.order.userId.slice(-6), // Placeholder since we don't have name in User easily without fetching
           product: product.name,
-          amount: `$${item.price.toFixed(2)}`,
+          amount: `$${Number(item.price).toFixed(2)}`,
           status: item.order.status,
           date: item.order.createdAt,
           img: product.images[0]

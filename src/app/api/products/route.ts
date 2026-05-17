@@ -4,9 +4,25 @@ import { auth } from "@/lib/auth-simple";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const isSellerQuery = searchParams.get("seller") === "true";
+    const session = await auth();
+
+    let whereClause: any = { active: true };
+
+    if (isSellerQuery && session?.user?.id) {
+      const seller = await prisma.seller.findUnique({
+        where: { userId: session.user.id }
+      });
+      if (seller) {
+        whereClause = { sellerId: seller.id };
+      }
+    }
+
     const products = await prisma.product.findMany({
+      where: whereClause,
       include: {
         seller: true,
       },
@@ -46,7 +62,8 @@ export async function POST(req: Request) {
       isFlashSale, 
       discountPercentage,
       originalPrice,
-      discountedPrice
+      discountedPrice,
+      stock
     } = body;
 
     // Create the product
@@ -58,6 +75,8 @@ export async function POST(req: Request) {
         category,
         sellerId: seller.id,
         images,
+        stock: stock ? parseInt(stock) : 10,
+        active: true,
         flashSale: isFlashSale ? {
           isFlashSale: true,
           originalPrice: originalPrice || price,

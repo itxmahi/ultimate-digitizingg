@@ -20,6 +20,10 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 const Marketplace = () => {
+  const productIsFlash = (p: any) => {
+    return p && p.flashSale && typeof p.flashSale === "object" && (p.flashSale as any).isFlashSale;
+  };
+
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +56,7 @@ const Marketplace = () => {
       (p.seller?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
-    const matchesPrice = Number(p.isFlashSale ? p.discountedPrice : p.price) <= priceThreshold;
+    const matchesPrice = Number(productIsFlash(p) ? p.flashSale.discountedPrice : p.price) <= priceThreshold;
 
     return matchesSearch && matchesCategory && matchesPrice;
   });
@@ -288,7 +292,7 @@ const Marketplace = () => {
                     <Link
                       href={getWhatsAppLink(
                         displayName,
-                        Number(product.isFlashSale ? product.discountedPrice : product.price)
+                        Number(productIsFlash(product) ? product.flashSale.discountedPrice : product.price)
                       )}
                       target="_blank"
                       className="absolute bottom-3 left-3 right-3 z-20"
@@ -322,10 +326,10 @@ const Marketplace = () => {
                     <div className="flex flex-col space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex flex-col">
-                          {product.isFlashSale ? (
+                          {productIsFlash(product) ? (
                             <div className="flex flex-col">
-                              <span className="text-2xl font-bold tracking-tight text-white">${Number(product.discountedPrice).toFixed(2)}</span>
-                              <span className="text-[11px] text-slate-500 line-through">${Number(product.originalPrice).toFixed(2)}</span>
+                              <span className="text-2xl font-bold tracking-tight text-white">${Number(product.flashSale.discountedPrice).toFixed(2)}</span>
+                              <span className="text-[11px] text-slate-500 line-through">${Number(product.flashSale.originalPrice).toFixed(2)}</span>
                             </div>
                           ) : (
                             <span className="text-2xl font-bold tracking-tight text-white">${Number(product.price).toFixed(2)}</span>
@@ -337,7 +341,7 @@ const Marketplace = () => {
                       </div>
 
                       <Link 
-                        href={getWhatsAppLink(displayName, Number(product.isFlashSale ? product.discountedPrice : product.price))} 
+                        href={getWhatsAppLink(displayName, Number(productIsFlash(product) ? product.flashSale.discountedPrice : product.price))} 
                         target="_blank"
                         className="block w-full"
                       >

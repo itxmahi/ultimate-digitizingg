@@ -26,13 +26,19 @@ const FlashSalePage = () => {
     seconds: 59,
   });
 
+  const productIsFlash = (p: any) => {
+    return p && p.flashSale && typeof p.flashSale === "object" && (p.flashSale as any).isFlashSale;
+  };
+
   useEffect(() => {
     const fetchFlashSales = async () => {
       try {
         const response = await fetch("/api/products");
         const data = await response.json();
-        const flashSales = data.filter((p: any) => p.isFlashSale);
-        setProducts(flashSales);
+        if (Array.isArray(data)) {
+          const flashSales = data.filter((p: any) => productIsFlash(p));
+          setProducts(flashSales);
+        }
       } catch (error) {
         console.error("Failed to fetch flash sales:", error);
       } finally {
@@ -103,83 +109,89 @@ const FlashSalePage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-            {products.map((product, idx) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -15 }}
-                className="group relative glass border border-white/5 rounded-[3.5rem] overflow-hidden transition-all duration-700 shadow-2xl hover:border-primary/40"
-              >
-                <div className="relative aspect-[4/5] overflow-hidden m-2.5 rounded-[2.5rem]">
-                  <Link href={`/marketplace/${product.id}`}>
-                    <img 
-                      src={product.images?.[0]?.startsWith('http') ? product.images[0] : `/images/${product.images?.[0] || 'placeholder.jpg'}`} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 
-                    />
-                  </Link>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700 pointer-events-none" />
-                  
-                  
-                  <button className="absolute top-6 right-6 w-12 h-12 glass border border-white/10 rounded-2xl text-white flex items-center justify-center hover:bg-primary transition-all duration-500 z-10">
-                    <Heart size={18} className="group-hover:scale-110 transition-transform" />
-                  </button>
+            {products.map((product, idx) => {
+              const isFS = productIsFlash(product);
+              const discountPercent = isFS ? product.flashSale.discountPercentage : 0;
+              const discountedPrice = isFS ? product.flashSale.discountedPrice : product.price;
+              const originalPrice = isFS ? product.flashSale.originalPrice : product.price;
 
-                  <div className="absolute bottom-8 left-8 right-8 z-20 space-y-4">
-                      <Link href={`/marketplace/${product.id}`}>
-                        <h3 className="text-white font-black text-2xl tracking-tighter uppercase italic line-clamp-1 group-hover:text-primary transition-colors">{product.name}</h3>
-                      </Link>
-                       <div className="flex flex-col space-y-5">
-                          <div className="flex items-center justify-between">
-                             <div className="flex items-center space-x-4">
-                                <span className="text-3xl font-black text-primary italic tracking-tighter">${Number(product.discountedPrice).toFixed(2)}</span>
-                                <span className="text-[11px] text-white/20 font-black line-through italic">${Number(product.originalPrice).toFixed(2)}</span>
-                             </div>
-                             <div className="text-[11px] font-black text-white/40 italic uppercase tracking-[0.2em]">
-                               -{product.discountPercentage}%
-                             </div>
-                          </div>
-                          <Link 
-                             href={generateWhatsAppLink(
-                               product.name, 
-                               product.originalPrice,
-                               product.discountPercentage,
-                               product.discountedPrice,
-                               session?.user?.email || undefined,
-                               product.seller?.contactInfo
-                             )}
-                             target="_blank"
-                             className="w-full"
-                          >
-                            <Button className="w-full h-14 rounded-[2rem] buy-now-premium text-[10px] group/btn">
-                               <Zap size={18} className="mr-3 group-hover/btn:rotate-12 transition-transform" />
-                               BUY NOW • BRAND STORE
-                            </Button>
-                          </Link>
+              return (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  whileHover={{ y: -15 }}
+                  className="group relative glass border border-white/5 rounded-[3.5rem] overflow-hidden transition-all duration-700 shadow-2xl hover:border-primary/40"
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden m-2.5 rounded-[2.5rem]">
+                    <Link href={`/marketplace/${product.id}`}>
+                      <img 
+                        src={product.images?.[0]?.startsWith('http') ? product.images[0] : `/images/${product.images?.[0] || 'placeholder.jpg'}`} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 
+                      />
+                    </Link>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700 pointer-events-none" />
+                    
+                    <button className="absolute top-6 right-6 w-12 h-12 glass border border-white/10 rounded-2xl text-white flex items-center justify-center hover:bg-primary transition-all duration-500 z-10">
+                      <Heart size={18} className="group-hover:scale-110 transition-transform" />
+                    </button>
+
+                    <div className="absolute bottom-8 left-8 right-8 z-20 space-y-4">
+                        <Link href={`/marketplace/${product.id}`}>
+                          <h3 className="text-white font-black text-2xl tracking-tighter uppercase italic line-clamp-1 group-hover:text-primary transition-colors">{product.name}</h3>
+                        </Link>
+                         <div className="flex flex-col space-y-5">
+                            <div className="flex items-center justify-between">
+                               <div className="flex items-center space-x-4">
+                                  <span className="text-3xl font-black text-primary italic tracking-tighter">${Number(discountedPrice).toFixed(2)}</span>
+                                  <span className="text-[11px] text-white/20 font-black line-through italic">${Number(originalPrice).toFixed(2)}</span>
+                               </div>
+                               <div className="text-[11px] font-black text-white/40 italic uppercase tracking-[0.2em]">
+                                 -{discountPercent}%
+                               </div>
+                            </div>
+                            <Link 
+                               href={generateWhatsAppLink(
+                                 product.name, 
+                                 originalPrice,
+                                 discountPercent,
+                                 discountedPrice,
+                                 session?.user?.email || undefined,
+                                 product.seller?.contactInfo
+                               )}
+                               target="_blank"
+                               className="w-full"
+                            >
+                              <Button className="w-full h-14 rounded-[2rem] buy-now-premium text-[10px] group/btn">
+                                 <Zap size={18} className="mr-3 group-hover/btn:rotate-12 transition-transform" />
+                                 BUY NOW • BRAND STORE
+                              </Button>
+                            </Link>
+                         </div>
+                    </div>
+                  </div>
+
+                  <div className="px-10 pb-10 pt-4">
+                    <div className="space-y-4">
+                       <div className="flex justify-between text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.4em] italic">
+                          <span>LOCKED PROTOCOL</span>
+                          <span className="text-primary animate-pulse">ACTIVE</span>
                        </div>
+                       <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            whileInView={{ width: "100%" }}
+                            transition={{ duration: 1.5, delay: 0.5 }}
+                            className="h-full luxury-gradient rounded-full relative" 
+                          />
+                       </div>
+                    </div>
                   </div>
-                </div>
-
-                <div className="px-10 pb-10 pt-4">
-                  <div className="space-y-4">
-                     <div className="flex justify-between text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.4em] italic">
-                        <span>LOCKED PROTOCOL</span>
-                        <span className="text-primary animate-pulse">ACTIVE</span>
-                     </div>
-                     <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          whileInView={{ width: "100%" }}
-                          transition={{ duration: 1.5, delay: 0.5 }}
-                          className="h-full luxury-gradient rounded-full relative" 
-                        />
-                     </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
 

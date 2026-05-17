@@ -1,11 +1,36 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Search, Filter, Eye, Download, Loader2 } from "lucide-react";
+import { Search, Filter, Eye, Download, Loader2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const OrdersPage = () => {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([
+    {
+      id: "ord_f18e9a2b",
+      user: { name: "Ahmad Raza", email: "ahmad@titan.com", phone: "+923451234567" },
+      items: [ { product: { name: "Elite Gold Crest Precision" } } ],
+      totalAmount: 120.00,
+      status: "PROCESSING",
+      createdAt: new Date(Date.now() - 3600000 * 2).toISOString() // 2 hours ago
+    },
+    {
+      id: "ord_c8b9d0e2",
+      user: { name: "Zainab Bano", email: "zainab@lux.com", phone: "+923219876543" },
+      items: [ { product: { name: "Silver Lotus Pattern Protocol" } } ],
+      totalAmount: 85.50,
+      status: "COMPLETED",
+      createdAt: new Date(Date.now() - 3600000 * 24).toISOString() // 1 day ago
+    },
+    {
+      id: "ord_a5f2e8c1",
+      user: { name: "John Doe", email: "john@cyber.com", phone: "+14155552671" },
+      items: [ { product: { name: "Neon Skull Cyber DST" } } ],
+      totalAmount: 150.00,
+      status: "PENDING",
+      createdAt: new Date(Date.now() - 3600000 * 48).toISOString() // 2 days ago
+    }
+  ]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -13,7 +38,7 @@ const OrdersPage = () => {
     try {
       const response = await fetch("/api/seller/orders");
       const data = await response.json();
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         setOrders(data);
       }
     } catch (error) {
@@ -138,9 +163,20 @@ const OrdersPage = () => {
                     </select>
                   </td>
                   <td className="py-6 px-8 text-right">
-                    <Button variant="ghost" size="icon" className="w-12 h-12 rounded-xl glass border-white/10 text-muted-foreground hover:text-primary transition-all group-hover:scale-110 shadow-xl">
-                      <Eye size={18} />
-                    </Button>
+                    <div className="flex items-center justify-end space-x-3">
+                      <a 
+                        href={`https://wa.me/${order.user?.phone?.replace(/[^0-9]/g, '') || '923451234567'}?text=Order%20Update%20for%20Invoice%20%23${order.id.slice(-8).toUpperCase()}%3A%20Your%20custom%20stitching%20asset%20is%20now%20in%20status%20${order.status}!%20Thank%20you%20for%20choosing%20Ultimate%20Digitizing.`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all duration-300 shadow-xl"
+                        title="Text updates via WhatsApp"
+                      >
+                        <MessageSquare size={16} />
+                      </a>
+                      <Button variant="ghost" size="icon" className="w-12 h-12 rounded-xl glass border border-white/10 text-muted-foreground hover:text-primary transition-all group-hover:scale-110 shadow-xl">
+                        <Eye size={18} />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

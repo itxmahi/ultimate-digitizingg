@@ -24,6 +24,10 @@ import { generateWhatsAppLink } from "@/lib/whatsapp";
 import Link from "next/link";
 
 const ProductDetails = () => {
+  const productIsFlash = (p: any) => {
+    return p && p.flashSale && typeof p.flashSale === "object" && (p.flashSale as any).isFlashSale;
+  };
+
   const { id } = useParams();
   const { data: session } = useSession();
   const [product, setProduct] = useState<any>(null);
@@ -180,13 +184,13 @@ const ProductDetails = () => {
                <div className="flex flex-col">
                   <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mb-2 italic">Valuation</span>
                   <div className="flex items-baseline space-x-4">
-                    <span className="text-6xl font-black italic tracking-tighter text-white">${Number(product.isFlashSale ? product.discountedPrice : product.price).toFixed(2)}</span>
-                    {product.isFlashSale && (
-                      <span className="text-xl text-muted-foreground/30 line-through font-black italic">${Number(product.originalPrice).toFixed(2)}</span>
+                    <span className="text-6xl font-black italic tracking-tighter text-white">${Number(productIsFlash(product) ? product.flashSale.discountedPrice : product.price).toFixed(2)}</span>
+                    {productIsFlash(product) && (
+                      <span className="text-xl text-muted-foreground/30 line-through font-black italic">${Number(product.flashSale.originalPrice).toFixed(2)}</span>
                     )}
                   </div>
                </div>
-               {product.isFlashSale && (
+               {productIsFlash(product) && (
                  <div className="ml-auto bg-primary text-white text-[10px] font-black px-5 py-2.5 rounded-full shadow-2xl italic uppercase tracking-widest">
                     -{product.discountPercentage}% OFF
                  </div>
@@ -208,9 +212,9 @@ const ProductDetails = () => {
                <Link 
                  href={generateWhatsAppLink(
                    product.name, 
-                   product.originalPrice,
-                   product.discountPercentage,
-                   product.isFlashSale ? product.discountedPrice : product.price,
+                   productIsFlash(product) ? product.flashSale.originalPrice : product.price,
+                   productIsFlash(product) ? product.flashSale.discountPercentage : undefined,
+                   productIsFlash(product) ? product.flashSale.discountedPrice : product.price,
                    session?.user?.email || undefined,
                    product.seller?.contactInfo
                  )}

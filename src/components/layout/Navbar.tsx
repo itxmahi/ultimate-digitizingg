@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, User, Menu, X, Search, Sparkles, Zap, ArrowRight, LogOut, LayoutDashboard, Settings, Store, ShieldCheck } from "lucide-react";
+import { ShoppingCart, User, Menu, X, Search, Sparkles, Zap, ArrowRight, LogOut, LayoutDashboard, Settings, Store, ShieldCheck, Package, ShoppingBag, Users, BarChart3, MessageSquare, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession, signOut } from "next-auth/react";
 
@@ -24,13 +24,35 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const isSellerRoute = pathname?.startsWith("/seller");
+
   const navLinks = [
     { name: "MARKETPLACE", href: "/marketplace", icon: <Sparkles size={16} className="mr-3" /> },
     { name: "FLASH SALE", href: "/flash-sale", badge: "ELITE" },
     { name: "CUSTOM STITCH", href: "/custom-stitch" },
-    // Only show Seller Studio if role is SELLER
-    ...(session?.user?.role === "SELLER" ? [{ name: "SELLER STUDIO", href: "/seller/dashboard" }] : []),
-    ...(session?.user?.role === "BUYER" ? [{ name: "GET STARTED", href: "/seller/onboarding", badge: "NEW" }] : []),
+    // Path-based dynamic switching for Become Buyer/Seller Studio
+    ...(isSellerRoute
+      ? [
+          { name: "BECOME A BUYER", href: "/marketplace", badge: "SWITCH" }
+        ]
+      : [
+          { 
+            name: "SELLER STUDIO", 
+            href: "/seller/dashboard", 
+            badge: "PORTAL",
+            subItems: [
+              { name: "Dashboard", href: "/seller/dashboard", icon: <LayoutDashboard size={14} /> },
+              { name: "Products", href: "/seller/products", icon: <Package size={14} /> },
+              { name: "Upload Product", href: "/seller/products/new", icon: <PlusCircle size={14} /> },
+              { name: "Profile Settings", href: "/seller/settings", icon: <Settings size={14} /> },
+              { name: "Orders", href: "/seller/orders", icon: <ShoppingBag size={14} /> },
+              { name: "Customers", href: "/seller/customers", icon: <Users size={14} /> },
+              { name: "Analytics", href: "/seller/analytics", icon: <BarChart3 size={14} /> },
+              { name: "Messages", href: "/seller/messages", icon: <MessageSquare size={14} /> },
+            ]
+          }
+        ]
+    )
   ];
 
   return (
@@ -121,35 +143,60 @@ const Navbar = () => {
 
             {/* Desktop Navigation - ULTRA TYPOGRAPHY */}
             <div className={`hidden lg:flex items-center ${scrolled ? "bg-white/[0.02]" : "bg-white/[0.05]"} rounded-full px-4 py-1.5 border border-white/5 transition-all duration-700 backdrop-blur-3xl`}>
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="relative px-8 py-3.5 group"
-                >
-                  <span className={`text-[10px] font-black uppercase tracking-[0.3em] transition-all duration-700 relative z-10 flex items-center italic ${
-                    pathname === link.href ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground"
-                  }`}>
-                    {link.icon && link.icon}
-                    {link.name}
-                    {link.badge && (
-                      <span className="absolute -top-1.5 -right-2 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)]">
-                        {link.badge}
+              {navLinks.map((link) => {
+                const hasSubItems = 'subItems' in link && link.subItems && link.subItems.length > 0;
+                
+                return (
+                  <div key={link.name} className="relative group">
+                    <Link
+                      href={link.href}
+                      className="relative px-8 py-3.5 block"
+                    >
+                      <span className={`text-[10px] font-black uppercase tracking-[0.3em] transition-all duration-700 relative z-10 flex items-center italic ${
+                        pathname === link.href ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground"
+                      }`}>
+                        {link.icon && link.icon}
+                        {link.name}
+                        {link.badge && (
+                          <span className="absolute -top-1.5 -right-2 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)]">
+                            {link.badge}
+                          </span>
+                        )}
                       </span>
+                      {pathname === link.href && (
+                        <motion.div
+                          layoutId="nav-active"
+                          className="absolute inset-0 bg-white/5 rounded-full z-0 border border-white/5 shadow-inner"
+                          transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+                        />
+                      )}
+                      <motion.div
+                        className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full scale-0 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_10px_var(--color-primary)]"
+                      />
+                    </Link>
+
+                    {hasSubItems && (
+                      <div className="absolute top-[80%] left-1/2 -translate-x-1/2 pt-4 opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-300 z-[100]">
+                        <div className="w-[320px] p-4 rounded-3xl bg-[#020617]/95 backdrop-blur-3xl border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.9)] grid grid-cols-1 gap-1">
+                          <div className="p-3 border-b border-white/5 mb-2">
+                            <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em] italic">SELLER COMMAND CENTER</span>
+                          </div>
+                          {link.subItems?.map((sub) => (
+                            <Link
+                              key={sub.name}
+                              href={sub.href}
+                              className="flex items-center space-x-3 px-4 py-3 rounded-2xl text-muted-foreground/60 hover:text-white hover:bg-white/5 transition-all group/sub duration-300"
+                            >
+                              <span className="text-primary opacity-60 group-hover/sub:opacity-100 transition-opacity">{sub.icon}</span>
+                              <span className="text-[9px] font-black uppercase tracking-widest italic">{sub.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                  </span>
-                  {pathname === link.href && (
-                    <motion.div
-                      layoutId="nav-active"
-                      className="absolute inset-0 bg-white/5 rounded-full z-0 border border-white/5 shadow-inner"
-                      transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
-                    />
-                  )}
-                  <motion.div
-                    className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full scale-0 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_10px_var(--color-primary)]"
-                  />
-                </Link>
-              ))}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Actions - PREMIUM UI */}
@@ -207,10 +254,16 @@ const Navbar = () => {
                         
                         <div className="space-y-1">
                           {session.user?.role === "SELLER" ? (
-                            <Link href="/seller/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
-                              <LayoutDashboard size={16} className="text-muted-foreground/60 group-hover:text-primary" />
-                               <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">SELLER DASHBOARD</span>
-                            </Link>
+                            <>
+                              <Link href="/seller/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group">
+                                <LayoutDashboard size={16} className="text-muted-foreground/60 group-hover:text-primary" />
+                                 <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">SELLER DASHBOARD</span>
+                              </Link>
+                              <Link href="/marketplace" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-white/5 transition-colors group border border-white/5">
+                                <Store size={16} className="text-muted-foreground/60 group-hover:text-primary" />
+                                 <span className="text-[10px] font-black text-muted-foreground/60 group-hover:text-white uppercase tracking-widest italic">BECOME A BUYER</span>
+                              </Link>
+                            </>
                           ) : (
                             <Link href="/seller/onboarding" onClick={() => setIsProfileOpen(false)} className="flex items-center space-x-3 w-full p-4 rounded-xl hover:bg-primary/10 transition-colors group border border-primary/20">
                               <Store size={16} className="text-primary" />
@@ -301,27 +354,48 @@ const Navbar = () => {
                 </div>
 
                 <div className="space-y-4 relative z-10 overflow-y-auto flex-1 pr-2 custom-scrollbar">
-                  {navLinks.map((link, i) => (
-                    <motion.div
-                      key={link.name}
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                    >
-                      <Link
-                        href={link.href}
-                        onClick={() => setIsOpen(false)}
-                        className={`group flex items-center justify-between p-7 rounded-[2rem] border transition-all duration-500 ${
-                          pathname === link.href 
-                            ? "bg-primary text-white border-primary shadow-[0_20px_40px_rgba(37,99,235,0.4)]" 
-                            : "bg-white/[0.03] border-white/5 text-muted-foreground/60 hover:bg-white/10 hover:border-white/10 hover:text-foreground hover:shadow-2xl"
-                        }`}
+                  {navLinks.map((link, i) => {
+                    const hasSubItems = 'subItems' in link && link.subItems && link.subItems.length > 0;
+                    
+                    return (
+                      <motion.div
+                        key={link.name}
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="space-y-3"
                       >
-                        <span className="text-2xl font-black tracking-tighter uppercase italic">{link.name}</span>
-                        <ArrowRight size={24} className={`transition-all duration-500 ${pathname === link.href ? "translate-x-0" : "-translate-x-6 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"}`} />
-                      </Link>
-                    </motion.div>
-                  ))}
+                        <Link
+                          href={link.href}
+                          onClick={() => setIsOpen(false)}
+                          className={`group flex items-center justify-between p-7 rounded-[2rem] border transition-all duration-500 ${
+                            pathname === link.href 
+                              ? "bg-primary text-white border-primary shadow-[0_20px_40px_rgba(37,99,235,0.4)]" 
+                              : "bg-white/[0.03] border-white/5 text-muted-foreground/60 hover:bg-white/10 hover:border-white/10 hover:text-foreground hover:shadow-2xl"
+                          }`}
+                        >
+                          <span className="text-2xl font-black tracking-tighter uppercase italic">{link.name}</span>
+                          <ArrowRight size={24} className={`transition-all duration-500 ${pathname === link.href ? "translate-x-0" : "-translate-x-6 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"}`} />
+                        </Link>
+                        
+                        {hasSubItems && (
+                          <div className="grid grid-cols-2 gap-3 pl-4">
+                            {link.subItems?.map((sub) => (
+                              <Link
+                                key={sub.name}
+                                href={sub.href}
+                                onClick={() => setIsOpen(false)}
+                                className="flex items-center space-x-3 p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/5 text-muted-foreground/60 hover:text-white transition-all"
+                              >
+                                <span className="text-primary">{sub.icon}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest italic">{sub.name}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
                 </div>
 
                 <div className="pt-10 mt-10 border-t border-white/5 space-y-6 relative z-10">
@@ -343,11 +417,18 @@ const Navbar = () => {
                         </div>
                       </div>
                       {session.user?.role === "SELLER" ? (
-                        <Link href="/seller/dashboard" onClick={() => setIsOpen(false)}>
-                          <Button className="w-full h-20 rounded-[2rem] luxury-gradient border-none text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">
-                            SELLER STUDIO
-                          </Button>
-                        </Link>
+                        <div className="space-y-4">
+                          <Link href="/seller/dashboard" onClick={() => setIsOpen(false)} className="block w-full">
+                            <Button className="w-full h-20 rounded-[2rem] luxury-gradient border-none text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">
+                              SELLER STUDIO
+                            </Button>
+                          </Link>
+                          <Link href="/marketplace" onClick={() => setIsOpen(false)} className="block w-full">
+                            <Button variant="outline" className="w-full h-20 rounded-[2rem] border-white/10 bg-white/5 text-white font-black text-[11px] uppercase tracking-[0.4em] italic">
+                              BECOME A BUYER
+                            </Button>
+                          </Link>
+                        </div>
                       ) : (
                         <Link href="/seller/onboarding" onClick={() => setIsOpen(false)}>
                           <Button className="w-full h-20 rounded-[2rem] bg-primary text-white font-black text-[11px] uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(37,99,235,0.3)] italic">

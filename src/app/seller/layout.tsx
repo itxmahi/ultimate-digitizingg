@@ -31,13 +31,19 @@ const SellerLayout = ({ children }: { children: React.ReactNode }) => {
     return <div className="min-h-screen bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   }
 
-  if (!session || session.user?.role !== "SELLER") {
-    redirect("/");
+  if (!session) {
+    redirect("/login?callbackUrl=/seller/dashboard");
+  }
+
+  if (session.user?.role !== "SELLER" && pathname !== "/seller/onboarding") {
+    redirect("/seller/onboarding");
   }
 
   const menuItems = [
     { name: "Dashboard", href: "/seller/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Products", href: "/seller/products", icon: <Package size={20} /> },
+    { name: "Upload Product", href: "/seller/products/new", icon: <PlusCircle size={20} /> },
+    { name: "Profile Settings", href: "/seller/settings", icon: <Settings size={20} /> },
     { name: "Orders", href: "/seller/orders", icon: <ShoppingBag size={20} /> },
     { name: "Customers", href: "/seller/customers", icon: <Users size={20} /> },
     { name: "Analytics", href: "/seller/analytics", icon: <BarChart3 size={20} /> },

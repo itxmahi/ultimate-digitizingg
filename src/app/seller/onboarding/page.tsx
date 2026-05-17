@@ -21,10 +21,11 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 
 const SellerOnboarding = () => {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
 
   const [formData, setFormData] = useState({
     storeName: "",
@@ -58,8 +59,11 @@ const SellerOnboarding = () => {
 
       if (response.ok) {
         setIsSuccess(true);
+        if (update) {
+          await update();
+        }
         setTimeout(() => {
-          router.push("/");
+          router.push("/seller/dashboard");
         }, 3000);
       } else {
         const error = await response.json();
@@ -96,14 +100,13 @@ const SellerOnboarding = () => {
             <CheckCircle2 size={48} className="text-primary" />
           </div>
           <div className="space-y-4">
-            <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter">Application Sent</h2>
+            <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter">Studio Initialized!</h2>
             <p className="text-muted-foreground/60 text-sm font-medium italic">
-              Your elite seller registration protocol has been initialized. Our analysts will review your credentials manually. 
-              Status: <span className="text-primary font-black uppercase">PENDING REVIEW</span>
+              Your elite seller studio profile has been successfully deployed. Redirecting you to your Command Center...
             </p>
           </div>
           <Button disabled className="w-full h-16 rounded-2xl luxury-gradient border-none text-white font-black text-xs uppercase tracking-widest italic">
-            Redirecting to Hub...
+            Redirecting to Studio...
           </Button>
         </motion.div>
       </div>
@@ -245,20 +248,22 @@ const SellerOnboarding = () => {
               />
             </div>
 
-            <Button 
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-24 rounded-[2.5rem] luxury-gradient border-none text-white font-black text-[12px] tracking-[0.6em] uppercase italic shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
-            >
-              {isLoading ? (
-                <Loader2 size={24} className="animate-spin" />
-              ) : (
-                <>
-                  INITIALIZE MERCHANT ACCOUNT
-                  <ArrowRight size={20} className="ml-6" />
-                </>
-              )}
-            </Button>
+            <div className="flex justify-center">
+              <Button 
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-24 rounded-[2.5rem] luxury-gradient border-none text-white font-black text-[12px] tracking-[0.4em] uppercase italic shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
+              >
+                {isLoading ? (
+                  <Loader2 size={24} className="animate-spin" />
+                ) : (
+                  <>
+                    INITIALIZE MERCHANT ACCOUNT
+                    <ArrowRight size={18} className="ml-4" />
+                  </>
+                )}
+              </Button>
+            </div>
           </form>
         </motion.div>
 

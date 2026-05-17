@@ -33,13 +33,13 @@ export async function POST(req: Request) {
           address,
           contactInfo,
           description,
-          approved: false, // Explicitly false for manual check
+          approved: true, // Auto-approve for instant access
         },
       }),
       prisma.user.update({
         where: { id: session.user.id },
         data: {
-          role: "PENDING_SELLER",
+          role: "SELLER",
         },
       }),
     ]);
